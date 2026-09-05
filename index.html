@@ -100,7 +100,6 @@
       
       <!-- 1. 每日行程表 -->
       <div v-if="currentTab === 'itinerary'">
-        <!-- 天數切換與新增天數列 -->
         <div class="flex gap-2 items-center overflow-x-auto no-scrollbar mb-6 pb-2">
           <button v-for="(day, index) in days" :key="index" @click="selectedDayIndex = index"
             :class="selectedDayIndex === index ? 'bg-accent-sage text-white shadow-md' : 'bg-white text-beige-800 border border-beige-200'"
@@ -117,7 +116,6 @@
           </button>
         </div>
 
-        <!-- 天數管理列 -->
         <div class="bg-white/80 backdrop-blur rounded-2xl p-3 mb-4 flex items-center justify-between border border-beige-200/60 shadow-sm">
           <span class="text-xs font-bold text-beige-800">
             <i class="fa-solid fa-calendar-day mr-1.5 text-accent-sage"></i>Day {{ selectedDayIndex + 1 }} - {{ days[selectedDayIndex]?.dateDisplay }}
@@ -133,7 +131,6 @@
           </div>
         </div>
 
-        <!-- 行程卡片列表 -->
         <div class="space-y-4">
           <div v-for="(item, idx) in currentDaySchedule" :key="item.id" class="relative group">
             
@@ -215,21 +212,68 @@
         </div>
       </div>
 
-      <!-- 2. 實用資訊 Tab -->
-      <div v-if="currentTab === 'info'" class="space-y-6">
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-beige-200">
-          <h3 class="font-bold text-beige-900 mb-3 flex items-center gap-2">
-            <i class="fa-solid fa-calculator text-accent-sage"></i> 匯率即時換算 (日幣 ➔ 台幣)
-          </h3>
-          <div class="flex gap-2 items-center">
-            <input type="number" v-model="jpyInput" placeholder="輸入 JPY" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-beige-400">
-            <span class="text-sm font-bold">¥ =</span>
-            <div class="w-full bg-beige-100 rounded-xl px-3 py-2 text-sm font-bold text-beige-900">
-              NT$ {{ (jpyInput * 0.215).toFixed(0) }}
+      <!-- 2. 實用日語 Tab (支援情境圖卡切換 + 語音播放) -->
+      <div v-if="currentTab === 'japanese'" class="space-y-4">
+        
+        <!-- 情況 A：未選擇情境，顯示四大圖卡首頁 -->
+        <template v-if="!selectedJpCategory">
+          <div class="bg-accent-sage/10 border border-accent-sage/30 rounded-2xl p-4 text-xs text-beige-800 flex items-start gap-2.5">
+            <i class="fa-solid fa-circle-info text-accent-sage text-base mt-0.5"></i>
+            <div>
+              <span class="font-bold block mb-0.5">旅遊溝通小幫手</span>
+              請點選下方任一情境圖卡，即可查看該分類的豐富實用日語短句，並可點擊發音或全螢幕放大出示。
             </div>
           </div>
-          <div class="text-[10px] text-beige-400 mt-1.5 text-right">參考匯率：1 JPY ≈ 0.215 TWD</div>
-        </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div v-for="(group, idx) in japanesePhrases" :key="idx" 
+                 @click="selectedJpCategory = group"
+                 class="bg-white hover:bg-beige-100 active:scale-95 transition rounded-2xl p-5 shadow-sm border border-beige-200 flex flex-col items-center text-center cursor-pointer group">
+              <div class="w-12 h-12 rounded-2xl bg-beige-100 text-accent-terracotta flex items-center justify-center text-xl mb-3 group-hover:bg-accent-terracotta group-hover:text-white transition">
+                <i :class="group.icon"></i>
+              </div>
+              <h4 class="font-bold text-sm text-beige-900 mb-1">{{ group.category }}</h4>
+              <span class="text-[11px] text-beige-400">{{ group.items.length }} 則常用短句</span>
+            </div>
+          </div>
+        </template>
+
+        <!-- 情況 B：已選擇特定情境，顯示該情境列表 -->
+        <template v-else>
+          <div class="flex items-center justify-between mb-2">
+            <button @click="selectedJpCategory = null" class="text-xs bg-beige-200/80 hover:bg-beige-200 text-beige-800 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition">
+              <i class="fa-solid fa-arrow-left"></i> 返回情境總覽
+            </button>
+            <span class="text-xs font-bold text-accent-terracotta bg-accent-terracotta/10 px-3 py-1 rounded-xl">
+              {{ selectedJpCategory.category }}
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            <div v-for="(item, iidx) in selectedJpCategory.items" :key="iidx" 
+                 class="bg-white p-4 rounded-2xl shadow-sm border border-beige-200 flex items-center justify-between gap-3">
+              
+              <!-- 點擊文字區塊可放大 -->
+              <div @click="showLargeJapanese(item)" class="flex-1 cursor-pointer">
+                <div class="font-bold text-base text-beige-900 font-maru">{{ item.jp }}</div>
+                <div class="text-xs text-beige-400 mt-0.5">{{ item.kana }}</div>
+                <div class="text-xs font-bold text-beige-800 mt-1">{{ item.zh }}</div>
+              </div>
+
+              <!-- 播放語音與放大按鈕 -->
+              <div class="flex items-center gap-1.5 flex-shrink-0">
+                <button @click="speakJapanese(item.jp)" class="w-10 h-10 rounded-xl bg-accent-sage/10 hover:bg-accent-sage/20 text-accent-sage flex items-center justify-center transition active:scale-90" title="播放日文發音">
+                  <i class="fa-solid fa-volume-high text-sm"></i>
+                </button>
+                <button @click="showLargeJapanese(item)" class="w-10 h-10 rounded-xl bg-beige-100 hover:bg-beige-200 text-beige-800 flex items-center justify-center transition active:scale-90" title="全螢幕放大">
+                  <i class="fa-solid fa-expand text-sm"></i>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </template>
+
       </div>
 
       <!-- 3. 購物清單 Tab -->
@@ -314,22 +358,161 @@
         </div>
       </div>
 
+      <!-- 5. 自駕助手 Tab -->
+      <div v-if="currentTab === 'drive'" class="space-y-4">
+        <div v-for="item in driveList" :key="item.id" class="bg-white rounded-2xl p-4 shadow-sm border border-beige-200 relative">
+          
+          <!-- A. 租車資訊卡 -->
+          <template v-if="item.type === '租車'">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs bg-beige-800 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
+                <i class="fa-solid fa-car-side"></i> 租車預約
+              </span>
+              <button @click="openEditModal(item)" class="text-beige-300 hover:text-beige-800 p-1">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </button>
+            </div>
+
+            <h4 class="font-bold text-lg text-beige-900 mb-1">{{ item.company || 'Toyota Rent-a-Car' }}</h4>
+            <div v-if="item.carModel" class="text-xs text-accent-terracotta font-bold mb-3">
+              車號/車型：{{ item.carModel }}
+            </div>
+
+            <div class="text-xs space-y-2 text-beige-800 bg-beige-50 p-3 rounded-xl border border-beige-200/60 mb-3">
+              <div v-if="item.reservationNo" class="flex items-center gap-2">
+                <i class="fa-solid fa-file-contract text-beige-400 w-4"></i>
+                <span>預約番號：<strong class="font-mono text-beige-900">{{ item.reservationNo }}</strong></span>
+              </div>
+              <div v-if="item.mapCode" class="flex items-center gap-2">
+                <i class="fa-solid fa-location-crosshairs text-beige-400 w-4"></i>
+                <span>MapCode：<strong class="font-mono text-beige-900">{{ item.mapCode }}</strong></span>
+              </div>
+              <div v-if="item.pickupTime" class="flex items-start gap-2">
+                <i class="fa-solid fa-clock text-beige-400 w-4 mt-0.5"></i>
+                <div>
+                  <div>取車：{{ item.pickupTime }} ({{ item.pickupStore }})</div>
+                  <div v-if="item.returnTime">還車：{{ item.returnTime }} ({{ item.returnStore }})</div>
+                </div>
+              </div>
+              <div v-if="item.phone" class="flex items-center gap-2">
+                <i class="fa-solid fa-phone text-beige-400 w-4"></i>
+                <span>電話：{{ item.phone }}</span>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <button v-if="item.phone" @click="callPhone(item.phone)" class="flex-1 bg-beige-100 hover:bg-beige-200 text-beige-800 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
+                <i class="fa-solid fa-phone-volume text-accent-sage"></i> 撥打電話
+              </button>
+              <button @click="openMap(item.mapUrl, item.pickupStore || item.company)" class="flex-1 bg-beige-800 hover:bg-beige-900 text-white py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
+                <i class="fa-solid fa-compass text-accent-sand"></i> 導航取車點
+              </button>
+            </div>
+          </template>
+
+          <!-- B. 加油站卡片 -->
+          <template v-else-if="item.type === '加油'">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs bg-red-600 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
+                <i class="fa-solid fa-gas-pump"></i> 加油資訊
+              </span>
+              <button @click="openEditModal(item)" class="text-beige-300 hover:text-beige-800 p-1">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </button>
+            </div>
+
+            <h4 class="font-bold text-base text-beige-900 mb-1">{{ item.stationName || '還車前指定加油站' }}</h4>
+            
+            <div class="text-xs text-beige-800 space-y-1.5 mb-3">
+              <div v-if="item.gasType" class="flex items-center gap-1.5">
+                <span class="text-beige-400 font-medium">建議油品：</span>
+                <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold">{{ item.gasType }}</span>
+              </div>
+              <div v-if="item.mapCode" class="flex items-center gap-1.5">
+                <span class="text-beige-400 font-medium">MapCode：</span>
+                <span class="font-mono font-bold">{{ item.mapCode }}</span>
+              </div>
+              <div v-if="item.note" class="text-beige-400 italic">
+                <i class="fa-solid fa-circle-info mr-1 text-accent-sage"></i>{{ item.note }}
+              </div>
+            </div>
+
+            <button @click="openMap(item.mapUrl, item.stationName)" class="w-full bg-beige-100 hover:bg-beige-200 text-beige-800 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
+              <i class="fa-solid fa-compass text-accent-terracotta"></i> 導航加油站
+            </button>
+          </template>
+
+          <!-- C. 停車場卡片 -->
+          <template v-else-if="item.type === '停車場'">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs bg-blue-600 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
+                <i class="fa-solid fa-square-parking"></i> 停車場備註
+              </span>
+              <button @click="openEditModal(item)" class="text-beige-300 hover:text-beige-800 p-1">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </button>
+            </div>
+
+            <h4 class="font-bold text-base text-beige-900 mb-1">{{ item.parkingName }}</h4>
+            
+            <div class="text-xs text-beige-800 space-y-1.5 mb-3">
+              <div v-if="item.feeNote" class="flex items-center gap-1.5">
+                <span class="text-beige-400 font-medium">收費說明：</span>
+                <span class="font-bold text-accent-terracotta">{{ item.feeNote }}</span>
+              </div>
+              <div v-if="item.note" class="text-beige-400 italic">
+                {{ item.note }}
+              </div>
+            </div>
+
+            <button @click="openMap(item.mapUrl, item.parkingName)" class="w-full bg-beige-100 hover:bg-beige-200 text-beige-800 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
+              <i class="fa-solid fa-compass text-accent-terracotta"></i> 導航至停車場
+            </button>
+          </template>
+
+          <!-- D. 過路費 / ETC 卡片 -->
+          <template v-else-if="item.type === '過路費'">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs bg-emerald-700 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
+                <i class="fa-solid fa-road"></i> 高速公路過路費 / ETC
+              </span>
+              <button @click="openEditModal(item)" class="text-beige-300 hover:text-beige-800 p-1">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </button>
+            </div>
+
+            <div class="flex justify-between items-center">
+              <div>
+                <h4 class="font-bold text-base text-beige-900">{{ item.route || 'IC 路線' }}</h4>
+                <div v-if="item.note" class="text-xs text-beige-400 italic mt-0.5">{{ item.note }}</div>
+              </div>
+              <div class="text-right">
+                <div class="font-bold text-lg text-beige-900 font-maru">¥ {{ Number(item.amount || 0).toLocaleString() }}</div>
+              </div>
+            </div>
+          </template>
+
+        </div>
+      </div>
+
     </div>
 
-    <!-- ================= 左下角浮動分頁選單 (新功能) ================= -->
+    <!-- ================= 左下角浮動分頁選單 ================= -->
     <div class="fixed bottom-6 left-6 z-40">
-      <!-- 點擊選單外部時的遮罩 (選單開啟時出現) -->
       <div v-if="showNavMenu" @click="showNavMenu = false" class="fixed inset-0 bg-black/20 backdrop-blur-xs z-30"></div>
 
-      <!-- 懸浮彈出選單內容 -->
-      <div v-if="showNavMenu" class="absolute bottom-16 left-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beige-200 min-w-[160px] space-y-1 z-40 transition-all duration-200 animate-fade-in">
+      <div v-if="showNavMenu" class="absolute bottom-16 left-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beige-200 min-w-[160px] space-y-1 z-40 transition-all duration-200">
         <button @click="switchTab('itinerary')" :class="currentTab === 'itinerary' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
           <i class="fa-solid fa-map-location-dot w-5 text-center"></i>
           <span>行程表</span>
         </button>
-        <button @click="switchTab('info')" :class="currentTab === 'info' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
-          <i class="fa-solid fa-circle-info w-5 text-center"></i>
-          <span>實用資訊</span>
+        <button @click="switchTab('drive')" :class="currentTab === 'drive' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
+          <i class="fa-solid fa-car w-5 text-center"></i>
+          <span>自駕</span>
+        </button>
+        <button @click="switchTab('japanese')" :class="currentTab === 'japanese' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
+          <i class="fa-solid fa-language w-5 text-center"></i>
+          <span>實用日語</span>
         </button>
         <button @click="switchTab('shopping')" :class="currentTab === 'shopping' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
           <i class="fa-solid fa-basket-shopping w-5 text-center"></i>
@@ -341,21 +524,71 @@
         </button>
       </div>
 
-      <!-- 左下角主要觸發按鈕 -->
       <button @click="showNavMenu = !showNavMenu" class="w-14 h-14 bg-white text-beige-800 border border-beige-200 rounded-full shadow-xl flex items-center justify-center text-xl z-40 active:scale-95 transition hover:bg-beige-50">
         <i v-if="!showNavMenu" class="fa-solid fa-layer-group"></i>
         <i v-else class="fa-solid fa-xmark text-lg"></i>
       </button>
     </div>
 
-    <!-- 右下角浮動新增按鈕 (+) -->
-    <button @click="openAddModal" class="fixed bottom-6 right-6 w-14 h-14 bg-beige-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-30 active:scale-95 transition">
-      <i class="fa-solid fa-plus"></i>
-    </button>
+    <!-- ================= 右下角浮動新增選單 (+) ================= -->
+    <div v-if="currentTab === 'itinerary' || currentTab === 'drive'" class="fixed bottom-6 right-6 z-40">
+      <div v-if="showAddMenu" @click="showAddMenu = false" class="fixed inset-0 bg-black/20 backdrop-blur-xs z-30"></div>
+
+      <!-- 類型懸浮選單 -->
+      <div v-if="showAddMenu" class="absolute bottom-16 right-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beige-200 min-w-[150px] space-y-1 z-40 transition-all duration-200">
+        
+        <!-- 行程表類型選擇 -->
+        <template v-if="currentTab === 'itinerary'">
+          <button v-for="cat in ['景點', '美食', '購物', '住宿', '航班', '其他']" :key="cat" @click="selectAddType(cat)" class="w-full px-3.5 py-2 rounded-xl flex items-center justify-between text-xs font-bold text-beige-800 hover:bg-beige-100 transition">
+            <span>{{ cat }}</span>
+            <i class="fa-solid fa-angle-right text-beige-400"></i>
+          </button>
+        </template>
+
+        <!-- 自駕類型選擇 -->
+        <template v-else-if="currentTab === 'drive'">
+          <button v-for="type in ['租車', '加油', '停車場', '過路費']" :key="type" @click="selectAddType(type)" class="w-full px-3.5 py-2 rounded-xl flex items-center justify-between text-xs font-bold text-beige-800 hover:bg-beige-100 transition">
+            <span>{{ type }}</span>
+            <i class="fa-solid fa-angle-right text-beige-400"></i>
+          </button>
+        </template>
+
+      </div>
+
+      <button @click="showAddMenu = !showAddMenu" class="w-14 h-14 bg-beige-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
+        <i :class="showAddMenu ? 'fa-solid fa-xmark text-xl' : 'fa-solid fa-plus'"></i>
+      </button>
+    </div>
+
+    <!-- 購物、花費分頁的一般右下角新增按鈕 -->
+    <div v-else class="fixed bottom-6 right-6 z-40">
+      <button @click="openAddModal()" class="w-14 h-14 bg-beige-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+    </div>
 
     <!-- 圖片放大預覽彈窗 -->
     <div v-if="previewImageSrc" @click="previewImageSrc = null" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 cursor-pointer">
       <img :src="previewImageSrc" class="max-w-full max-h-[85vh] rounded-2xl object-contain shadow-2xl">
+    </div>
+
+    <!-- 日文放大全螢幕檢視彈窗 -->
+    <div v-if="largeJapaneseItem" @click="largeJapaneseItem = null" class="fixed inset-0 bg-black/85 z-50 flex flex-col items-center justify-center p-6 text-center cursor-pointer">
+      <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl space-y-4" @click.stop>
+        <div class="text-xs text-accent-terracotta font-bold tracking-widest uppercase">請出示此畫面</div>
+        <div class="text-3xl font-bold text-beige-900 font-maru leading-snug">{{ largeJapaneseItem.jp }}</div>
+        <div class="text-sm text-beige-400">{{ largeJapaneseItem.kana }}</div>
+        <div class="text-base font-bold text-beige-800 pt-2 border-t border-beige-100">{{ largeJapaneseItem.zh }}</div>
+        
+        <div class="flex gap-2 pt-2">
+          <button @click="speakJapanese(largeJapaneseItem.jp)" class="flex-1 bg-accent-sage/10 hover:bg-accent-sage/20 text-accent-sage font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-volume-high"></i> 播放聲音
+          </button>
+          <button @click="largeJapaneseItem = null" class="flex-1 bg-beige-100 hover:bg-beige-200 text-beige-800 font-bold py-2.5 rounded-xl text-xs">
+            關閉
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- 編輯 / 新增彈出視窗 -->
@@ -368,10 +601,9 @@
 
         <!-- 1. 行程彈窗 -->
         <div v-if="currentTab === 'itinerary'" class="space-y-3">
-          <label class="text-xs font-bold text-beige-800">類別</label>
-          <select v-model="formData.category" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <option>景點</option><option>美食</option><option>購物</option><option>住宿</option><option>航班</option><option>其他</option>
-          </select>
+          <div class="flex justify-between items-center bg-beige-100 px-3 py-2 rounded-xl text-xs font-bold text-beige-800">
+            <span>類別：{{ formData.category }}</span>
+          </div>
 
           <template v-if="formData.category === '航班'">
             <input v-model="formData.flightNo" placeholder="航班號碼 (例: JX800)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
@@ -398,30 +630,73 @@
           </template>
         </div>
 
-        <!-- 2. 購物彈窗 -->
+        <!-- 2. 自駕彈窗 -->
+        <div v-if="currentTab === 'drive'" class="space-y-3">
+          <div class="flex justify-between items-center bg-beige-100 px-3 py-2 rounded-xl text-xs font-bold text-beige-800">
+            <span>類型：{{ formData.type }}</span>
+          </div>
+
+          <!-- 租車欄位 -->
+          <template v-if="formData.type === '租車'">
+            <input v-model="formData.company" placeholder="租車公司名稱 (例: TOYOTA Rent a Car)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.carModel" placeholder="車型 / 車號 (例: Yaris / 沖繩 500)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.reservationNo" placeholder="預約號碼 (選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapCode" placeholder="取車門市 MapCode (選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.pickupStore" placeholder="取車門市名稱" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.pickupTime" placeholder="取車時間 (例: 9/6 10:00)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.returnStore" placeholder="還車門市名稱" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.returnTime" placeholder="還車時間 (例: 9/10 17:00)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.phone" placeholder="門市電話 (例: +81-476-32-1020)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapUrl" placeholder="Google Maps 取車點連結" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+          </template>
+
+          <!-- 加油欄位 -->
+          <template v-else-if="formData.type === '加油'">
+            <input v-model="formData.stationName" placeholder="加油站名稱 (例: ENEOS 成田機場前店)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.gasType" placeholder="油品種類 (例: Regular 赤色 / 柴油)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapCode" placeholder="MapCode (選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapUrl" placeholder="Google Maps 加油站連結" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <textarea v-model="formData.note" placeholder="備註 (例: 還車前記得在此加滿油並索取發票)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm h-16"></textarea>
+          </template>
+
+          <!-- 停車場欄位 -->
+          <template v-else-if="formData.type === '停車場'">
+            <input v-model="formData.parkingName" placeholder="停車場名稱 / 景點停車場" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.feeNote" placeholder="收費說明 (例: 1小時 ¥300 / 夜間最大上限 ¥800)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapUrl" placeholder="Google Maps 停車場連結" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <textarea v-model="formData.note" placeholder="備註 (例: 車位號碼 12 號、只能付現)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm h-16"></textarea>
+          </template>
+
+          <!-- 過路費欄位 -->
+          <template v-else-if="formData.type === '過路費'">
+            <input v-model="formData.route" placeholder="路線 / 區間 (例: 成田IC ➔ 首都高)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input type="number" v-model="formData.amount" placeholder="金額 (日幣 JPY)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.note" placeholder="備註 (例: ETC 自動扣款)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+          </template>
+        </div>
+
+        <!-- 3. 購物彈窗 -->
         <div v-if="currentTab === 'shopping'" class="space-y-3">
           <input v-model="formData.name" placeholder="商品名稱" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
           <input type="number" v-model="formData.price" placeholder="預估金額 (日幣 JPY，選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
           <input v-model="formData.location" placeholder="購買地點 / 店名 (例: 唐吉訶德 澀谷店)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
           <input v-model="formData.mapUrl" placeholder="Google Maps 導航連結 (選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-          
           <div>
             <label class="text-xs font-bold text-beige-800 block mb-1">商品照片</label>
             <input type="file" @change="handleImageUpload" class="w-full text-xs text-beige-800" accept="image/*">
           </div>
         </div>
 
-        <!-- 3. 花費彈窗 -->
+        <!-- 4. 花費彈窗 -->
         <div v-if="currentTab === 'expense'" class="space-y-3">
           <select v-model="formData.category" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <option>交通</option><option>飲食</option><option>住宿</option><option>門票</option><option>購物</option><option>其他</option>
+            <option>交通</option><option>飲食</option><option>住宿</option><option>門票</option><option>購物</option><option>租車/加油</option><option>其他</option>
           </select>
           <input v-model="formData.name" placeholder="項目名稱" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
           <input type="number" v-model="formData.amount" placeholder="金額 (日幣 JPY)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
           <select v-model="formData.payMethod" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
             <option>現金</option><option>信用卡</option>
           </select>
-          
           <div>
             <label class="text-xs font-bold text-beige-800 block mb-1">收據 / 明細 / 消費照片</label>
             <input type="file" @change="handleImageUpload" class="w-full text-xs text-beige-800" accept="image/*">
@@ -464,17 +739,20 @@
       };
 
       const currentTab = ref('itinerary');
-      const showNavMenu = ref(false); // 控制懸浮分頁選單開關
+      const showNavMenu = ref(false);
+      const showAddMenu = ref(false);
       const bannerUrl = ref('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1920&auto=format&fit=crop');
-      const jpyInput = ref(10000);
       const selectedDayIndex = ref(0);
       const showModal = ref(false);
       const isEditing = ref(false);
       const previewImageSrc = ref(null);
+      const largeJapaneseItem = ref(null);
+      const selectedJpCategory = ref(null);
 
       const switchTab = (tab) => {
         currentTab.value = tab;
-        showNavMenu.value = false; // 切換分頁後自動收起選單
+        showNavMenu.value = false;
+        showAddMenu.value = false;
       };
 
       const loadSavedData = (key, fallback) => {
@@ -499,6 +777,11 @@
         ]
       }));
 
+      const driveList = ref(loadSavedData('trip_drive', [
+        { id: '1', type: '租車', company: 'Toyota Rent-a-Car', carModel: 'Yaris (小轎車)', reservationNo: 'TR-882910', mapCode: '33 157 281*00', pickupStore: '成田機場 T1 店', pickupTime: '9/6 13:30', returnStore: '成田機場 T1 店', returnTime: '9/10 16:00', phone: '+81-476-32-1020', mapUrl: '' },
+        { id: '2', type: '加油', stationName: 'ENEOS 成田機場前加油站', gasType: 'Regular (赤色無鉛)', mapCode: '33 158 100*11', note: '還車前記得在此加滿油，並保留收據！', mapUrl: '' }
+      ]));
+
       const shoppingList = ref(loadSavedData('trip_shopping', [
         { id: '1', name: '合利他命 EX Plus強效錠', price: 5980, location: '唐吉訶德 澀谷店 MEGA店', mapUrl: '', image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300' }
       ]));
@@ -507,8 +790,77 @@
         { id: '1', category: '飲食', name: '敘敘苑燒肉', amount: 12000, payMethod: '信用卡', date: '2026-09-06', image: '' }
       ]));
 
+      // 實用日語短句清單資料 (四大情境，每組皆擴充至10句以上)
+      const japanesePhrases = ref([
+        {
+          category: '購物與結帳',
+          icon: 'fa-solid fa-basket-shopping',
+          items: [
+            { jp: 'いくらですか？', kana: 'Ikura desu ka?', zh: '請問這個多少錢？' },
+            { jp: 'これをお願いします。', kana: 'Kore o onegai shimasu.', zh: '請幫我結帳這個。' },
+            { jp: '免税できますか？', kana: 'Menzei dekimasu ka?', zh: '請問可以退稅嗎？' },
+            { jp: 'クレジットカード使えますか？', kana: 'Kurejitto kādo tsukaemasu ka?', zh: '可以用信用卡嗎？' },
+            { jp: '袋をいただけますか？', kana: 'Fukuro o itadakemasu ka?', zh: '可以給我有袋子嗎？' },
+            { jp: '試着してもいいですか？', kana: 'Shichaku shite mo ii desu ka?', zh: '請問可以試穿嗎？' },
+            { jp: '別のサイズはありますか？', kana: 'Betsu no saizu wa arimasu ka?', zh: '請問有其他尺寸嗎？' },
+            { jp: '別々に会計できますか？', kana: 'Betsubetsu ni kaikei dekimasu ka?', zh: '請問可以分開結帳嗎？' },
+            { jp: 'レシートをください。', kana: 'Reshīto o kudasai.', zh: '請給我收據。' },
+            { jp: '見ているだけです。', kana: 'Mite iru dake desu.', zh: '我只是隨便看看。' }
+          ]
+        },
+        {
+          category: '餐廳與點餐',
+          icon: 'fa-solid fa-utensils',
+          items: [
+            { jp: 'おすすめは何ですか？', kana: 'Osusume wa nan desu ka?', zh: '請問有什麼推薦的嗎？' },
+            { jp: 'メニューをください。', kana: 'Menyū o kudasai.', zh: '請給我菜單。' },
+            { jp: 'お会計お願いします。', kana: 'Okaikei onegai shimasu.', zh: '麻煩請買單。' },
+            { jp: '水をいただけますか？', kana: 'Mizu o itadakemasu ka?', zh: '可以給我一杯水嗎？' },
+            { jp: '牛肉が食べられません。', kana: 'Gyūniku ga taberaremasen.', zh: '我不吃牛肉。' },
+            { jp: 'これと同じものをください。', kana: 'Kore to onaji mono o kudasai.', zh: '請給我一樣的品項。' },
+            { jp: '英語のメニューはありますか？', kana: 'Eigo no menyū wa arimasu ka?', zh: '請問有英文菜單嗎？' },
+            { jp: '氷なしでお願いします。', kana: 'Kōri nashi de onegai shimasu.', zh: '請幫我去冰。' },
+            { jp: 'アレルギーがあります。', kana: 'Arerugī ga arimasu.', zh: '我有食物過敏。' },
+            { jp: 'ごちそうさまでした。', kana: 'Gochisōsama deshita.', zh: '多謝款待（吃飽後說）。' }
+          ]
+        },
+        {
+          category: '問路與交通',
+          icon: 'fa-solid fa-compass',
+          items: [
+            { jp: '〜はどこですか？', kana: '~ wa doko desu ka?', zh: '請問 ~ 在哪裡？' },
+            { jp: 'トイレはどこですか？', kana: 'Toire wa doko desu ka?', zh: '請問洗手間在哪裡？' },
+            { jp: '駅はどこですか？', kana: 'Eki wa doko desu ka?', zh: '請問車站在哪裡？' },
+            { jp: '切符売り場はどこですか？', kana: 'Kippu uriba wa doko desu ka?', zh: '請問售票處在哪裡？' },
+            { jp: 'この電車は〜に行きますか？', kana: 'Kono densha wa ~ ni ikimasu ka?', zh: '這班電車會到 ~ 嗎？' },
+            { jp: '次の駅はどこですか？', kana: 'Tsugi no eki wa doko desu ka?', zh: '下一站是哪裡？' },
+            { jp: 'ここで降ります。', kana: 'Koko de orimasu.', zh: '我要在這裡下車。' },
+            { jp: 'タクシー乗り場はどこですか？', kana: 'Takushī noriba wa doko desu ka?', zh: '計程車搭乘處在哪裡？' },
+            { jp: '道に迷いました。', kana: 'Michi ni mayoimashita.', zh: '我迷路了。' },
+            { jp: '歩いて何分ですか？', kana: 'Aruite nanpun desu ka?', zh: '走路需要幾分鐘？' }
+          ]
+        },
+        {
+          category: '緊急與基本應對',
+          icon: 'fa-solid fa-triangle-exclamation',
+          items: [
+            { jp: 'すみません / ごめんなさい', kana: 'Sumimasen / Gomennasai', zh: '不好意思 / 對不起' },
+            { jp: '助けてください！', kana: 'Tasukete kudasai!', zh: '請救救我！ / 幫幫我！' },
+            { jp: '英語が話せますか？', kana: 'Eigo ga hanasemasu ka?', zh: '會說英文嗎？' },
+            { jp: '大丈夫です。', kana: 'Daijōbu desu.', zh: '沒關係 / 很好不需要' },
+            { jp: '警察を呼んでください。', kana: 'Keisatsu o yonde kudasai.', zh: '請幫我叫警察。' },
+            { jp: '病院はどこですか？', kana: 'Byōin wa doko desu ka?', zh: '請問醫院在哪裡？' },
+            { jp: '財布を無くしました。', kana: 'Saifu o nakushimashita.', zh: '我把錢包弄丟了。' },
+            { jp: 'パスポートを落としました。', kana: 'Pasupōto o otoshimashita.', zh: '我把護照弄丟了。' },
+            { jp: '具合が悪いです。', kana: 'Guai ga warui desu.', zh: '我身體很不舒服。' },
+            { jp: '日本語が少ししか話せません。', kana: 'Nihongo ga sukoshi shika hanasemasen.', zh: '我只會說一點點日文。' }
+          ]
+        }
+      ]);
+
       watch(days, (val) => localStorage.setItem('trip_days_v2', JSON.stringify(val)), { deep: true });
       watch(scheduleData, (val) => localStorage.setItem('trip_schedule', JSON.stringify(val)), { deep: true });
+      watch(driveList, (val) => localStorage.setItem('trip_drive', JSON.stringify(val)), { deep: true });
       watch(shoppingList, (val) => localStorage.setItem('trip_shopping', JSON.stringify(val)), { deep: true });
       watch(expenses, (val) => localStorage.setItem('trip_expenses', JSON.stringify(val)), { deep: true });
 
@@ -524,8 +876,29 @@
         }
       };
 
+      const callPhone = (phone) => {
+        if (phone) window.location.href = `tel:${phone.replace(/[^0-9+]/g, '')}`;
+      };
+
       const previewImg = (src) => {
         previewImageSrc.value = src;
+      };
+
+      const showLargeJapanese = (item) => {
+        largeJapaneseItem.value = item;
+      };
+
+      // 瀏覽器內建語音朗讀日文
+      const speakJapanese = (text) => {
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel(); // 停止先前的播放
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'ja-JP';
+          utterance.rate = 0.9; // 稍微放慢語速方便聽清楚
+          window.speechSynthesis.speak(utterance);
+        } else {
+          alert('您的瀏覽器不支援語音播放功能');
+        }
       };
 
       const addNewDay = () => {
@@ -576,9 +949,17 @@
         return 'fa-solid fa-person-walking';
       };
 
-      const openAddModal = () => {
+      const selectAddType = (type) => {
+        showAddMenu.value = false;
+        openAddModal(type);
+      };
+
+      const openAddModal = (type = null) => {
         isEditing.value = false;
-        formData.value = currentTab.value === 'itinerary' ? { category: '景點' } : (currentTab.value === 'expense' ? { category: '飲食', payMethod: '現金' } : {});
+        if (currentTab.value === 'itinerary') formData.value = { category: type || '景點' };
+        else if (currentTab.value === 'drive') formData.value = { type: type || '租車' };
+        else if (currentTab.value === 'expense') formData.value = { category: '飲食', payMethod: '現金' };
+        else formData.value = {};
         showModal.value = true;
       };
 
@@ -591,15 +972,18 @@
       const saveData = () => {
         if (currentTab.value === 'itinerary') {
           if (!scheduleData.value[selectedDayIndex.value]) scheduleData.value[selectedDayIndex.value] = [];
-          
           if (isEditing.value) {
             const idx = scheduleData.value[selectedDayIndex.value].findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) {
-              scheduleData.value[selectedDayIndex.value][idx] = { ...formData.value };
-            }
+            if (idx !== -1) scheduleData.value[selectedDayIndex.value][idx] = { ...formData.value };
           } else {
-            const newItem = { ...formData.value, id: Date.now().toString() };
-            scheduleData.value[selectedDayIndex.value].push(newItem);
+            scheduleData.value[selectedDayIndex.value].push({ ...formData.value, id: Date.now().toString() });
+          }
+        } else if (currentTab.value === 'drive') {
+          if (isEditing.value) {
+            const idx = driveList.value.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) driveList.value[idx] = { ...formData.value };
+          } else {
+            driveList.value.push({ ...formData.value, id: Date.now().toString() });
           }
         } else if (currentTab.value === 'shopping') {
           if (isEditing.value) {
@@ -613,11 +997,7 @@
             const idx = expenses.value.findIndex(i => i.id === formData.value.id);
             if (idx !== -1) expenses.value[idx] = { ...formData.value };
           } else {
-            expenses.value.push({ 
-              ...formData.value, 
-              id: Date.now().toString(), 
-              date: new Date().toISOString().split('T')[0] 
-            });
+            expenses.value.push({ ...formData.value, id: Date.now().toString(), date: new Date().toISOString().split('T')[0] });
           }
         }
         showModal.value = false;
@@ -627,6 +1007,8 @@
         if (confirm('確定要刪除這筆資料嗎？')) {
           if (currentTab.value === 'itinerary') {
             scheduleData.value[selectedDayIndex.value] = scheduleData.value[selectedDayIndex.value].filter(i => i.id !== formData.value.id);
+          } else if (currentTab.value === 'drive') {
+            driveList.value = driveList.value.filter(i => i.id !== formData.value.id);
           } else if (currentTab.value === 'shopping') {
             shoppingList.value = shoppingList.value.filter(i => i.id !== formData.value.id);
           } else if (currentTab.value === 'expense') {
@@ -638,10 +1020,10 @@
 
       return {
         isAuthenticated, passwordInput, passwordError, checkPassword,
-        currentTab, showNavMenu, switchTab, bannerUrl, jpyInput, selectedDayIndex, days,
-        scheduleData, currentDaySchedule, shoppingList, expenses, totalExpense,
-        showModal, isEditing, formData, previewImageSrc, uploadBanner, handleImageUpload,
-        openMap, previewImg, getTransportIcon, openAddModal, openEditModal, saveData, confirmDelete,
+        currentTab, showNavMenu, showAddMenu, switchTab, bannerUrl, selectedDayIndex, days,
+        scheduleData, currentDaySchedule, driveList, shoppingList, expenses, totalExpense, japanesePhrases,
+        selectedJpCategory, showModal, isEditing, formData, previewImageSrc, largeJapaneseItem, uploadBanner, handleImageUpload,
+        openMap, callPhone, previewImg, showLargeJapanese, speakJapanese, getTransportIcon, selectAddType, openAddModal, openEditModal, saveData, confirmDelete,
         addNewDay, editDayDate, deleteCurrentDay
       };
     }
