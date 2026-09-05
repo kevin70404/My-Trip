@@ -53,6 +53,15 @@
     }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* 修正 iOS / Safari 原生日期選擇器溢出問題 */
+    input[type="date"] {
+      -webkit-appearance: none;
+      min-width: 0;
+    }
+    input[type="date"]::-webkit-date-and-time-value {
+      text-align: center;
+    }
   </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen bg-beigetone-100 shadow-2xl relative pb-24">
@@ -585,7 +594,7 @@
       </div>
     </div>
 
-    <!-- 修改日期彈窗 (月曆選擇器 - 修正為置中、寬度與高度防溢出) -->
+    <!-- 修改日期彈窗 (月曆選擇器 - 修正寬度溢出與 Safari 呈現) -->
     <div v-if="showDateModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-sm rounded-[28px] p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center">
@@ -595,7 +604,9 @@
 
         <div class="space-y-3">
           <label class="text-xs font-bold text-beigetone-800 block">請從月曆選擇年月日：</label>
-          <input type="date" v-model="dateInputVal" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-4 py-3 text-base font-bold text-beigetone-900 focus:outline-none focus:border-beigetone-800 box-border">
+          <div class="w-full overflow-hidden rounded-2xl">
+            <input type="date" v-model="dateInputVal" class="w-full max-w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-3 py-3 text-base font-bold text-beigetone-900 focus:outline-none focus:border-beigetone-800 box-border text-center appearance-none">
+          </div>
         </div>
 
         <div class="flex gap-2 pt-2">
