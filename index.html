@@ -585,9 +585,9 @@
       </div>
     </div>
 
-    <!-- 修改日期彈窗 (月曆選擇器) -->
-    <div v-if="showDateModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end justify-center">
-      <div class="bg-white w-full max-w-md rounded-t-[28px] p-6 space-y-4 shadow-2xl">
+    <!-- 修改日期彈窗 (月曆選擇器 - 修正為置中、寬度與高度防溢出) -->
+    <div v-if="showDateModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white w-full max-w-sm rounded-[28px] p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center">
           <h3 class="font-bold text-lg text-beigetone-900">修改 Day {{ selectedDayIndex + 1 }} 日期</h3>
           <button @click="showDateModal = false" class="text-beigetone-400 hover:text-beigetone-800"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -595,7 +595,7 @@
 
         <div class="space-y-3">
           <label class="text-xs font-bold text-beigetone-800 block">請從月曆選擇年月日：</label>
-          <input type="date" v-model="dateInputVal" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-4 py-3 text-base font-bold text-beigetone-900 focus:outline-none focus:border-beigetone-800">
+          <input type="date" v-model="dateInputVal" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-4 py-3 text-base font-bold text-beigetone-900 focus:outline-none focus:border-beigetone-800 box-border">
         </div>
 
         <div class="flex gap-2 pt-2">
@@ -921,7 +921,6 @@
 
       const openDateModal = () => {
         const cur = days.value[selectedDayIndex.value]?.dateDisplay || '9/6 (日)';
-        // 嘗試將現有字串轉成 YYYY-MM-DD 格式填入日曆，預設若失敗則給今天
         const now = new Date();
         const year = now.getFullYear();
         dateInputVal.value = `${year}-09-06`;
@@ -930,7 +929,7 @@
 
       const saveDayDate = () => {
         if (!dateInputVal.value) return;
-        const parts = dateInputVal.value.split('-'); // [YYYY, MM, DD]
+        const parts = dateInputVal.value.split('-');
         if (parts.length === 3) {
           const m = parseInt(parts[1], 10);
           const d = parseInt(parts[2], 10);
