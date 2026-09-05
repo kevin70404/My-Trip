@@ -21,19 +21,19 @@
       theme: {
         extend: {
           colors: {
-            beige: {
-              50: '#FDFBF7',
-              100: '#F7F4EE',
-              200: '#EFEAE1',
-              300: '#E2D9CC',
-              400: '#C8B9A6',
-              800: '#5C5247',
-              900: '#3D352E',
+            beigetone: {
+              50: '#FBF9F5',
+              100: '#F5F2EB',
+              200: '#EBE5D8',
+              300: '#DED5C1',
+              400: '#C5B89D',
+              800: '#5C5243',
+              900: '#3D362C',
             },
             accent: {
               sage: '#8A9A86',
               terracotta: '#D08C72',
-              sand: '#D8C3A5'
+              sand: '#E6D5B8'
             }
           },
           fontFamily: {
@@ -46,8 +46,8 @@
   </script>
   <style>
     body {
-      background-color: #F7F4EE;
-      color: #3D352E;
+      background-color: #F5F2EB;
+      color: #3D362C;
       font-family: 'Noto Sans TC', sans-serif;
       -webkit-tap-highlight-color: transparent;
     }
@@ -55,24 +55,24 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen bg-beige-100 shadow-2xl relative pb-24">
+<body class="max-w-md mx-auto min-h-screen bg-beigetone-100 shadow-2xl relative pb-24">
 
 <div id="app">
 
   <!-- ================= 密碼驗證解鎖畫面 ================= -->
-  <div v-if="!isAuthenticated" class="fixed inset-0 bg-beige-100 z-50 flex flex-col items-center justify-center p-6 text-center">
-    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm border border-beige-200">
-      <div class="w-16 h-16 bg-beige-200 text-beige-800 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+  <div v-if="!isAuthenticated" class="fixed inset-0 bg-beigetone-100 z-50 flex flex-col items-center justify-center p-6 text-center">
+    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm border border-beigetone-200">
+      <div class="w-16 h-16 bg-beigetone-200 text-beigetone-800 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
         <i class="fa-solid fa-lock"></i>
       </div>
-      <h2 class="text-xl font-bold text-beige-900 mb-1">私人行程解鎖</h2>
-      <p class="text-xs text-beige-400 mb-6">此行程網頁受密碼保護，請輸入通行密碼</p>
+      <h2 class="text-xl font-bold text-beigetone-900 mb-1">私人行程解鎖</h2>
+      <p class="text-xs text-beigetone-400 mb-6">此行程網頁受密碼保護，請輸入通行密碼</p>
       
       <form @submit.prevent="checkPassword">
         <input type="text" inputmode="numeric" v-model="passwordInput" placeholder="請輸入密碼" 
-               class="w-full bg-beige-50 border border-beige-200 rounded-2xl px-4 py-3 text-center text-lg tracking-widest font-bold focus:outline-none focus:border-beige-800 mb-4">
+               class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-4 py-3 text-center text-lg tracking-widest font-bold focus:outline-none focus:border-beigetone-800 mb-4">
         
-        <button type="submit" class="w-full bg-beige-800 text-white font-bold py-3 rounded-2xl shadow-md hover:bg-beige-900 transition active:scale-95">
+        <button type="submit" class="w-full bg-beigetone-800 text-white font-bold py-3 rounded-2xl shadow-md hover:bg-beigetone-900 transition active:scale-95">
           解鎖進入
         </button>
       </form>
@@ -86,23 +86,23 @@
   <!-- ================= 主 Web App 畫面 ================= -->
   <template v-else>
     <!-- 頁首 Banner -->
-    <div class="relative w-full h-[220px] bg-beige-300 overflow-hidden">
+    <div class="relative w-full h-[220px] bg-beigetone-300 overflow-hidden">
       <img :src="bannerUrl" class="w-full h-full object-cover object-center" alt="旅遊 Banner">
       
-      <label class="absolute top-4 left-4 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full text-xs text-beige-800 shadow cursor-pointer hover:bg-white transition">
+      <label class="absolute top-4 left-4 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full text-xs text-beigetone-800 shadow cursor-pointer hover:bg-white transition">
         <i class="fa-solid fa-camera mr-1"></i> 更換封面
         <input type="file" @change="uploadBanner" class="hidden" accept="image/*">
       </label>
     </div>
 
     <!-- 主內容區域 -->
-    <div class="relative -mt-5 bg-beige-50 rounded-t-[28px] px-4 pt-6 pb-12 z-10 min-h-[calc(100vh-200px)] shadow-inner">
+    <div class="relative -mt-5 bg-beigetone-50 rounded-t-[28px] px-4 pt-6 pb-12 z-10 min-h-[calc(100vh-200px)] shadow-inner">
       
       <!-- 1. 每日行程表 -->
       <div v-if="currentTab === 'itinerary'">
         <div class="flex gap-2 items-center overflow-x-auto no-scrollbar mb-6 pb-2">
           <button v-for="(day, index) in days" :key="index" @click="selectedDayIndex = index"
-            :class="selectedDayIndex === index ? 'bg-accent-sage text-white shadow-md' : 'bg-white text-beige-800 border border-beige-200'"
+            :class="selectedDayIndex === index ? 'bg-accent-sage text-white shadow-md' : 'bg-white text-beigetone-800 border border-beigetone-200'"
             class="flex-shrink-0 min-w-[76px] px-2.5 py-2 rounded-2xl flex flex-col items-center justify-center transition relative group">
             
             <span class="text-xs font-bold tracking-wide">Day {{ index + 1 }}</span>
@@ -111,18 +111,18 @@
             </span>
           </button>
           
-          <button @click="addNewDay" class="flex-shrink-0 w-12 h-14 bg-white text-beige-800 border border-dashed border-beige-400 rounded-2xl flex items-center justify-center hover:bg-beige-100 transition">
+          <button @click="addNewDay" class="flex-shrink-0 w-12 h-14 bg-white text-beigetone-800 border border-dashed border-beigetone-400 rounded-2xl flex items-center justify-center hover:bg-beigetone-100 transition">
             <i class="fa-solid fa-plus text-lg"></i>
           </button>
         </div>
 
-        <div class="bg-white/80 backdrop-blur rounded-2xl p-3 mb-4 flex items-center justify-between border border-beige-200/60 shadow-sm">
-          <span class="text-xs font-bold text-beige-800">
+        <div class="bg-white/80 backdrop-blur rounded-2xl p-3 mb-4 flex items-center justify-between border border-beigetone-200/60 shadow-sm">
+          <span class="text-xs font-bold text-beigetone-800">
             <i class="fa-solid fa-calendar-day mr-1.5 text-accent-sage"></i>Day {{ selectedDayIndex + 1 }} - {{ days[selectedDayIndex]?.dateDisplay }}
           </span>
           
           <div class="flex items-center gap-1.5">
-            <button @click="editDayDate" class="text-xs px-2.5 py-1 bg-beige-100 text-beige-800 rounded-full font-medium hover:bg-beige-200 transition">
+            <button @click="openDateModal" class="text-xs px-2.5 py-1 bg-beigetone-100 text-beigetone-800 rounded-full font-medium hover:bg-beigetone-200 transition">
               <i class="fa-solid fa-pen mr-1"></i>修改日期
             </button>
             <button v-if="days.length > 1" @click="deleteCurrentDay" class="text-xs px-2.5 py-1 bg-red-50 text-red-600 rounded-full font-medium hover:bg-red-100 transition">
@@ -135,14 +135,14 @@
           <div v-for="(item, idx) in currentDaySchedule" :key="item.id" class="relative group">
             
             <div v-if="idx > 0" class="my-2.5 flex items-center justify-center">
-              <div class="bg-beige-200/70 text-beige-800 text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5 font-medium">
+              <div class="bg-beigetone-200/70 text-beigetone-800 text-[11px] px-3 py-1 rounded-full flex items-center gap-1.5 font-medium">
                 <i :class="getTransportIcon(item.transportType)"></i>
                 <span>{{ item.transportTime || '約 15 分鐘' }}</span>
               </div>
             </div>
 
             <!-- 航班卡片 -->
-            <div v-if="item.category === '航班'" class="bg-gradient-to-br from-beige-800 to-beige-900 text-white p-5 rounded-2xl shadow-md relative">
+            <div v-if="item.category === '航班'" class="bg-gradient-to-br from-beigetone-800 to-beigetone-900 text-white p-5 rounded-2xl shadow-md relative">
               <div class="flex justify-between items-center mb-3">
                 <span class="text-xs bg-accent-terracotta text-white px-2.5 py-0.5 rounded-md font-medium">航班資訊</span>
                 <button @click="openEditModal(item)" class="text-white/70 hover:text-white p-1">
@@ -154,7 +154,7 @@
                 <div class="w-1/3">
                   <div class="text-xl font-bold font-maru tracking-wide">
                     {{ item.depAirport || 'TPE' }}
-                    <span v-if="item.depCn" class="text-xs font-normal text-beige-300 block mt-0.5">{{ item.depCn }}</span>
+                    <span v-if="item.depCn" class="text-xs font-normal text-beigetone-200 block mt-0.5">{{ item.depCn }}</span>
                   </div>
                   <div class="text-base font-bold text-accent-sand mt-1">{{ item.depTime || '08:15' }}</div>
                 </div>
@@ -169,7 +169,7 @@
                 <div class="w-1/3">
                   <div class="text-xl font-bold font-maru tracking-wide">
                     {{ item.arrAirport || 'NRT' }}
-                    <span v-if="item.arrCn" class="text-xs font-normal text-beige-300 block mt-0.5">{{ item.arrCn }}</span>
+                    <span v-if="item.arrCn" class="text-xs font-normal text-beigetone-200 block mt-0.5">{{ item.arrCn }}</span>
                   </div>
                   <div class="text-base font-bold text-accent-sand mt-1">{{ item.arrTime || '12:30' }}</div>
                 </div>
@@ -177,33 +177,33 @@
             </div>
 
             <!-- 一般行程卡片 -->
-            <div v-else class="bg-white rounded-2xl p-4 shadow-sm border border-beige-200/80 relative">
+            <div v-else class="bg-white rounded-2xl p-4 shadow-sm border border-beigetone-200/80 relative">
               <div class="flex justify-between items-center mb-1.5">
                 <div class="flex items-center gap-2">
                   <span class="w-2 h-2 rounded-full bg-accent-sage"></span>
-                  <span class="text-xs text-beige-400 font-medium">{{ item.category }}</span>
+                  <span class="text-xs text-beigetone-400 font-medium">{{ item.category }}</span>
                 </div>
                 
-                <button @click="openMap(item.mapUrl, item.name)" class="text-xs bg-beige-100 hover:bg-beige-200 text-beige-800 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 transition">
+                <button @click="openMap(item.mapUrl, item.name)" class="text-xs bg-beigetone-100 hover:bg-beigetone-200 text-beigetone-800 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 transition">
                   <i class="fa-solid fa-compass text-accent-terracotta"></i> 導航
                 </button>
               </div>
 
-              <h4 class="font-bold text-beige-900 text-base mb-2 break-words">{{ item.name }}</h4>
+              <h4 class="font-bold text-beigetone-900 text-base mb-2 break-words">{{ item.name }}</h4>
               
-              <div class="text-xs text-beige-800 space-y-1 mb-2">
+              <div class="text-xs text-beigetone-800 space-y-1 mb-2">
                 <div v-if="item.time" class="flex items-center gap-1.5">
-                  <i class="fa-regular fa-clock text-beige-400"></i> {{ item.time }}
+                  <i class="fa-regular fa-clock text-beigetone-400"></i> {{ item.time }}
                 </div>
                 <div v-if="item.ticket" class="flex items-center gap-1.5">
-                  <i class="fa-solid fa-ticket text-beige-400"></i> {{ item.ticket }}
+                  <i class="fa-solid fa-ticket text-beigetone-400"></i> {{ item.ticket }}
                 </div>
-                <div v-if="item.note" class="text-beige-400 mt-1 pl-3 border-l-2 border-beige-200 italic break-words">
+                <div v-if="item.note" class="text-beigetone-400 mt-1 pl-3 border-l-2 border-beigetone-200 italic break-words">
                   {{ item.note }}
                 </div>
               </div>
 
-              <button @click="openEditModal(item)" class="absolute bottom-3 right-3 text-beige-300 hover:text-beige-800 p-1">
+              <button @click="openEditModal(item)" class="absolute bottom-3 right-3 text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen-to-square"></i>
               </button>
             </div>
@@ -212,12 +212,12 @@
         </div>
       </div>
 
-      <!-- 2. 實用日語 Tab (支援情境圖卡切換 + 語音播放) -->
+      <!-- 2. 實用日語 Tab -->
       <div v-if="currentTab === 'japanese'" class="space-y-4">
         
         <!-- 情況 A：未選擇情境，顯示四大圖卡首頁 -->
         <template v-if="!selectedJpCategory">
-          <div class="bg-accent-sage/10 border border-accent-sage/30 rounded-2xl p-4 text-xs text-beige-800 flex items-start gap-2.5">
+          <div class="bg-accent-sage/10 border border-accent-sage/30 rounded-2xl p-4 text-xs text-beigetone-800 flex items-start gap-2.5">
             <i class="fa-solid fa-circle-info text-accent-sage text-base mt-0.5"></i>
             <div>
               <span class="font-bold block mb-0.5">旅遊溝通小幫手</span>
@@ -228,12 +228,12 @@
           <div class="grid grid-cols-2 gap-3">
             <div v-for="(group, idx) in japanesePhrases" :key="idx" 
                  @click="selectedJpCategory = group"
-                 class="bg-white hover:bg-beige-100 active:scale-95 transition rounded-2xl p-5 shadow-sm border border-beige-200 flex flex-col items-center text-center cursor-pointer group">
-              <div class="w-12 h-12 rounded-2xl bg-beige-100 text-accent-terracotta flex items-center justify-center text-xl mb-3 group-hover:bg-accent-terracotta group-hover:text-white transition">
+                 class="bg-white hover:bg-beigetone-100 active:scale-95 transition rounded-2xl p-5 shadow-sm border border-beigetone-200 flex flex-col items-center text-center cursor-pointer group">
+              <div class="w-12 h-12 rounded-2xl bg-beigetone-100 text-accent-terracotta flex items-center justify-center text-xl mb-3 group-hover:bg-accent-terracotta group-hover:text-white transition">
                 <i :class="group.icon"></i>
               </div>
-              <h4 class="font-bold text-sm text-beige-900 mb-1">{{ group.category }}</h4>
-              <span class="text-[11px] text-beige-400">{{ group.items.length }} 則常用短句</span>
+              <h4 class="font-bold text-sm text-beigetone-900 mb-1">{{ group.category }}</h4>
+              <span class="text-[11px] text-beigetone-400">{{ group.items.length }} 則常用短句</span>
             </div>
           </div>
         </template>
@@ -241,7 +241,7 @@
         <!-- 情況 B：已選擇特定情境，顯示該情境列表 -->
         <template v-else>
           <div class="flex items-center justify-between mb-2">
-            <button @click="selectedJpCategory = null" class="text-xs bg-beige-200/80 hover:bg-beige-200 text-beige-800 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition">
+            <button @click="selectedJpCategory = null" class="text-xs bg-beigetone-200/80 hover:bg-beigetone-200 text-beigetone-800 px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition">
               <i class="fa-solid fa-arrow-left"></i> 返回情境總覽
             </button>
             <span class="text-xs font-bold text-accent-terracotta bg-accent-terracotta/10 px-3 py-1 rounded-xl">
@@ -251,21 +251,19 @@
 
           <div class="space-y-3">
             <div v-for="(item, iidx) in selectedJpCategory.items" :key="iidx" 
-                 class="bg-white p-4 rounded-2xl shadow-sm border border-beige-200 flex items-center justify-between gap-3">
+                 class="bg-white p-4 rounded-2xl shadow-sm border border-beigetone-200 flex items-center justify-between gap-3">
               
-              <!-- 點擊文字區塊可放大 -->
               <div @click="showLargeJapanese(item)" class="flex-1 cursor-pointer">
-                <div class="font-bold text-base text-beige-900 font-maru">{{ item.jp }}</div>
-                <div class="text-xs text-beige-400 mt-0.5">{{ item.kana }}</div>
-                <div class="text-xs font-bold text-beige-800 mt-1">{{ item.zh }}</div>
+                <div class="font-bold text-base text-beigetone-900 font-maru">{{ item.jp }}</div>
+                <div class="text-xs text-beigetone-400 mt-0.5">{{ item.kana }}</div>
+                <div class="text-xs font-bold text-beigetone-800 mt-1">{{ item.zh }}</div>
               </div>
 
-              <!-- 播放語音與放大按鈕 -->
               <div class="flex items-center gap-1.5 flex-shrink-0">
                 <button @click="speakJapanese(item.jp)" class="w-10 h-10 rounded-xl bg-accent-sage/10 hover:bg-accent-sage/20 text-accent-sage flex items-center justify-center transition active:scale-90" title="播放日文發音">
                   <i class="fa-solid fa-volume-high text-sm"></i>
                 </button>
-                <button @click="showLargeJapanese(item)" class="w-10 h-10 rounded-xl bg-beige-100 hover:bg-beige-200 text-beige-800 flex items-center justify-center transition active:scale-90" title="全螢幕放大">
+                <button @click="showLargeJapanese(item)" class="w-10 h-10 rounded-xl bg-beigetone-100 hover:bg-beigetone-200 text-beigetone-800 flex items-center justify-center transition active:scale-90" title="全螢幕放大">
                   <i class="fa-solid fa-expand text-sm"></i>
                 </button>
               </div>
@@ -279,29 +277,29 @@
       <!-- 3. 購物清單 Tab -->
       <div v-if="currentTab === 'shopping'">
         <div class="grid grid-cols-2 gap-3 items-start">
-          <div v-for="item in shoppingList" :key="item.id" class="bg-white rounded-2xl p-3 shadow-sm border border-beige-200 flex flex-col justify-between relative group h-full">
+          <div v-for="item in shoppingList" :key="item.id" class="bg-white rounded-2xl p-3 shadow-sm border border-beigetone-200 flex flex-col justify-between relative group h-full">
             
             <div class="flex-1">
-              <div class="w-full h-32 bg-beige-100 rounded-xl overflow-hidden mb-2.5 relative flex-shrink-0">
+              <div class="w-full h-32 bg-beigetone-100 rounded-xl overflow-hidden mb-2.5 relative flex-shrink-0">
                 <img v-if="item.image" :src="item.image" class="w-full h-full object-cover">
-                <div v-else class="w-full h-full flex items-center justify-center text-beige-300">
+                <div v-else class="w-full h-full flex items-center justify-center text-beigetone-300">
                   <i class="fa-solid fa-bag-shopping text-3xl"></i>
                 </div>
               </div>
 
-              <div class="font-bold text-sm text-beige-900 leading-snug break-words mb-1.5">{{ item.name }}</div>
+              <div class="font-bold text-sm text-beigetone-900 leading-snug break-words mb-1.5">{{ item.name }}</div>
 
               <div v-if="item.price" class="text-xs font-bold text-accent-terracotta font-maru mb-2">
                 ¥ {{ Number(item.price).toLocaleString() }}
               </div>
 
-              <div v-if="item.location" class="text-xs text-beige-800 pt-2 border-t border-beige-100 space-y-1.5">
-                <div class="text-[11px] text-beige-800 break-words leading-tight flex items-start gap-1">
-                  <i class="fa-solid fa-location-dot text-beige-400 mt-0.5 flex-shrink-0"></i>
+              <div v-if="item.location" class="text-xs text-beigetone-800 pt-2 border-t border-beigetone-100 space-y-1.5">
+                <div class="text-[11px] text-beigetone-800 break-words leading-tight flex items-start gap-1">
+                  <i class="fa-solid fa-location-dot text-beigetone-400 mt-0.5 flex-shrink-0"></i>
                   <span>{{ item.location }}</span>
                 </div>
 
-                <button @click="openMap(item.mapUrl, item.location)" class="w-full bg-beige-100 hover:bg-beige-200 text-beige-800 px-2 py-1 rounded-xl text-[11px] font-medium flex items-center justify-center gap-1 transition">
+                <button @click="openMap(item.mapUrl, item.location)" class="w-full bg-beigetone-100 hover:bg-beigetone-200 text-beigetone-800 px-2 py-1 rounded-xl text-[11px] font-medium flex items-center justify-center gap-1 transition">
                   <i class="fa-solid fa-compass text-accent-terracotta text-[10px]"></i> 導航地點
                 </button>
               </div>
@@ -317,17 +315,17 @@
 
       <!-- 4. 累積花費 Tab -->
       <div v-if="currentTab === 'expense'" class="space-y-4">
-        <div class="bg-beige-800 text-white rounded-2xl p-5 shadow-lg text-center">
-          <div class="text-xs text-beige-300 font-medium mb-1">累積總花費</div>
+        <div class="bg-beigetone-800 text-white rounded-2xl p-5 shadow-lg text-center">
+          <div class="text-xs text-beigetone-300 font-medium mb-1">累積總花費</div>
           <div class="text-3xl font-bold font-maru">¥ {{ totalExpense.toLocaleString() }}</div>
-          <div class="text-xs text-beige-300 mt-1">約 NT$ {{ (totalExpense * 0.215).toFixed(0).toLocaleString() }}</div>
+          <div class="text-xs text-beigetone-300 mt-1">約 NT$ {{ (totalExpense * 0.215).toFixed(0).toLocaleString() }}</div>
         </div>
 
         <div class="space-y-2">
-          <div v-for="exp in expenses" :key="exp.id" class="bg-white rounded-2xl p-3 shadow-sm border border-beige-200 flex justify-between items-center gap-3">
+          <div v-for="exp in expenses" :key="exp.id" class="bg-white rounded-2xl p-3 shadow-sm border border-beigetone-200 flex justify-between items-center gap-3">
             
             <div class="flex items-center gap-3 overflow-hidden">
-              <div v-if="exp.image" @click="previewImg(exp.image)" class="w-14 h-14 rounded-xl overflow-hidden bg-beige-100 flex-shrink-0 cursor-pointer relative group">
+              <div v-if="exp.image" @click="previewImg(exp.image)" class="w-14 h-14 rounded-xl overflow-hidden bg-beigetone-100 flex-shrink-0 cursor-pointer relative group">
                 <img :src="exp.image" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white text-xs">
                   <i class="fa-solid fa-magnifying-glass"></i>
@@ -335,9 +333,9 @@
               </div>
 
               <div class="min-w-0">
-                <div class="font-bold text-sm text-beige-900 break-words leading-snug">{{ exp.name }}</div>
-                <div class="text-[11px] text-beige-400 gap-1.5 flex flex-wrap items-center mt-0.5">
-                  <span class="bg-beige-100 px-1.5 py-0.5 rounded text-beige-800">{{ exp.category }}</span>
+                <div class="font-bold text-sm text-beigetone-900 break-words leading-snug">{{ exp.name }}</div>
+                <div class="text-[11px] text-beigetone-400 gap-1.5 flex flex-wrap items-center mt-0.5">
+                  <span class="bg-beigetone-100 px-1.5 py-0.5 rounded text-beigetone-800">{{ exp.category }}</span>
                   <span>•</span>
                   <span>{{ exp.payMethod }}</span>
                 </div>
@@ -346,10 +344,10 @@
 
             <div class="flex items-center gap-2 flex-shrink-0">
               <div class="text-right">
-                <div class="font-bold text-beige-900 font-maru">¥ {{ Number(exp.amount).toLocaleString() }}</div>
-                <div class="text-[10px] text-beige-400">{{ exp.date }}</div>
+                <div class="font-bold text-beigetone-900 font-maru">¥ {{ Number(exp.amount).toLocaleString() }}</div>
+                <div class="text-[10px] text-beigetone-400">{{ exp.date }}</div>
               </div>
-              <button @click="openEditModal(exp)" class="text-beige-300 hover:text-beige-800 p-1.5">
+              <button @click="openEditModal(exp)" class="text-beigetone-300 hover:text-beigetone-800 p-1.5">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
@@ -360,51 +358,51 @@
 
       <!-- 5. 自駕助手 Tab -->
       <div v-if="currentTab === 'drive'" class="space-y-4">
-        <div v-for="item in driveList" :key="item.id" class="bg-white rounded-2xl p-4 shadow-sm border border-beige-200 relative">
+        <div v-for="item in driveList" :key="item.id" class="bg-white rounded-2xl p-4 shadow-sm border border-beigetone-200 relative">
           
           <!-- A. 租車資訊卡 -->
           <template v-if="item.type === '租車'">
             <div class="flex justify-between items-center mb-2">
-              <span class="text-xs bg-beige-800 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
+              <span class="text-xs bg-beigetone-800 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-car-side"></i> 租車預約
               </span>
-              <button @click="openEditModal(item)" class="text-beige-300 hover:text-beige-800 p-1">
+              <button @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
 
-            <h4 class="font-bold text-lg text-beige-900 mb-1">{{ item.company || 'Toyota Rent-a-Car' }}</h4>
+            <h4 class="font-bold text-lg text-beigetone-900 mb-1">{{ item.company || 'Toyota Rent-a-Car' }}</h4>
             <div v-if="item.carModel" class="text-xs text-accent-terracotta font-bold mb-3">
               車號/車型：{{ item.carModel }}
             </div>
 
-            <div class="text-xs space-y-2 text-beige-800 bg-beige-50 p-3 rounded-xl border border-beige-200/60 mb-3">
+            <div class="text-xs space-y-2 text-beigetone-800 bg-beigetone-50 p-3 rounded-xl border border-beigetone-200/60 mb-3">
               <div v-if="item.reservationNo" class="flex items-center gap-2">
-                <i class="fa-solid fa-file-contract text-beige-400 w-4"></i>
-                <span>預約番號：<strong class="font-mono text-beige-900">{{ item.reservationNo }}</strong></span>
+                <i class="fa-solid fa-file-contract text-beigetone-400 w-4"></i>
+                <span>預約番號：<strong class="font-mono text-beigetone-900">{{ item.reservationNo }}</strong></span>
               </div>
               <div v-if="item.mapCode" class="flex items-center gap-2">
-                <i class="fa-solid fa-location-crosshairs text-beige-400 w-4"></i>
-                <span>MapCode：<strong class="font-mono text-beige-900">{{ item.mapCode }}</strong></span>
+                <i class="fa-solid fa-location-crosshairs text-beigetone-400 w-4"></i>
+                <span>MapCode：<strong class="font-mono text-beigetone-900">{{ item.mapCode }}</strong></span>
               </div>
               <div v-if="item.pickupTime" class="flex items-start gap-2">
-                <i class="fa-solid fa-clock text-beige-400 w-4 mt-0.5"></i>
+                <i class="fa-solid fa-clock text-beigetone-400 w-4 mt-0.5"></i>
                 <div>
                   <div>取車：{{ item.pickupTime }} ({{ item.pickupStore }})</div>
                   <div v-if="item.returnTime">還車：{{ item.returnTime }} ({{ item.returnStore }})</div>
                 </div>
               </div>
               <div v-if="item.phone" class="flex items-center gap-2">
-                <i class="fa-solid fa-phone text-beige-400 w-4"></i>
+                <i class="fa-solid fa-phone text-beigetone-400 w-4"></i>
                 <span>電話：{{ item.phone }}</span>
               </div>
             </div>
 
             <div class="flex gap-2">
-              <button v-if="item.phone" @click="callPhone(item.phone)" class="flex-1 bg-beige-100 hover:bg-beige-200 text-beige-800 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
+              <button v-if="item.phone" @click="callPhone(item.phone)" class="flex-1 bg-beigetone-100 hover:bg-beigetone-200 text-beigetone-800 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
                 <i class="fa-solid fa-phone-volume text-accent-sage"></i> 撥打電話
               </button>
-              <button @click="openMap(item.mapUrl, item.pickupStore || item.company)" class="flex-1 bg-beige-800 hover:bg-beige-900 text-white py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
+              <button @click="openMap(item.mapUrl, item.pickupStore || item.company)" class="flex-1 bg-beigetone-800 hover:bg-beigetone-900 text-white py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
                 <i class="fa-solid fa-compass text-accent-sand"></i> 導航取車點
               </button>
             </div>
@@ -416,28 +414,28 @@
               <span class="text-xs bg-red-600 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-gas-pump"></i> 加油資訊
               </span>
-              <button @click="openEditModal(item)" class="text-beige-300 hover:text-beige-800 p-1">
+              <button @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
 
-            <h4 class="font-bold text-base text-beige-900 mb-1">{{ item.stationName || '還車前指定加油站' }}</h4>
+            <h4 class="font-bold text-base text-beigetone-900 mb-1">{{ item.stationName || '還車前指定加油站' }}</h4>
             
-            <div class="text-xs text-beige-800 space-y-1.5 mb-3">
+            <div class="text-xs text-beigetone-800 space-y-1.5 mb-3">
               <div v-if="item.gasType" class="flex items-center gap-1.5">
-                <span class="text-beige-400 font-medium">建議油品：</span>
+                <span class="text-beigetone-400 font-medium">建議油品：</span>
                 <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold">{{ item.gasType }}</span>
               </div>
               <div v-if="item.mapCode" class="flex items-center gap-1.5">
-                <span class="text-beige-400 font-medium">MapCode：</span>
+                <span class="text-beigetone-400 font-medium">MapCode：</span>
                 <span class="font-mono font-bold">{{ item.mapCode }}</span>
               </div>
-              <div v-if="item.note" class="text-beige-400 italic">
+              <div v-if="item.note" class="text-beigetone-400 italic">
                 <i class="fa-solid fa-circle-info mr-1 text-accent-sage"></i>{{ item.note }}
               </div>
             </div>
 
-            <button @click="openMap(item.mapUrl, item.stationName)" class="w-full bg-beige-100 hover:bg-beige-200 text-beige-800 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
+            <button @click="openMap(item.mapUrl, item.stationName)" class="w-full bg-beigetone-100 hover:bg-beigetone-200 text-beigetone-800 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
               <i class="fa-solid fa-compass text-accent-terracotta"></i> 導航加油站
             </button>
           </template>
@@ -448,24 +446,24 @@
               <span class="text-xs bg-blue-600 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-square-parking"></i> 停車場備註
               </span>
-              <button @click="openEditModal(item)" class="text-beige-300 hover:text-beige-800 p-1">
+              <button @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
 
-            <h4 class="font-bold text-base text-beige-900 mb-1">{{ item.parkingName }}</h4>
+            <h4 class="font-bold text-base text-beigetone-900 mb-1">{{ item.parkingName }}</h4>
             
-            <div class="text-xs text-beige-800 space-y-1.5 mb-3">
+            <div class="text-xs text-beigetone-800 space-y-1.5 mb-3">
               <div v-if="item.feeNote" class="flex items-center gap-1.5">
-                <span class="text-beige-400 font-medium">收費說明：</span>
+                <span class="text-beigetone-400 font-medium">收費說明：</span>
                 <span class="font-bold text-accent-terracotta">{{ item.feeNote }}</span>
               </div>
-              <div v-if="item.note" class="text-beige-400 italic">
+              <div v-if="item.note" class="text-beigetone-400 italic">
                 {{ item.note }}
               </div>
             </div>
 
-            <button @click="openMap(item.mapUrl, item.parkingName)" class="w-full bg-beige-100 hover:bg-beige-200 text-beige-800 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
+            <button @click="openMap(item.mapUrl, item.parkingName)" class="w-full bg-beigetone-100 hover:bg-beigetone-200 text-beigetone-800 py-1.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition">
               <i class="fa-solid fa-compass text-accent-terracotta"></i> 導航至停車場
             </button>
           </template>
@@ -476,18 +474,18 @@
               <span class="text-xs bg-emerald-700 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-road"></i> 高速公路過路費 / ETC
               </span>
-              <button @click="openEditModal(item)" class="text-beige-300 hover:text-beige-800 p-1">
+              <button @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
 
             <div class="flex justify-between items-center">
               <div>
-                <h4 class="font-bold text-base text-beige-900">{{ item.route || 'IC 路線' }}</h4>
-                <div v-if="item.note" class="text-xs text-beige-400 italic mt-0.5">{{ item.note }}</div>
+                <h4 class="font-bold text-base text-beigetone-900">{{ item.route || 'IC 路線' }}</h4>
+                <div v-if="item.note" class="text-xs text-beigetone-400 italic mt-0.5">{{ item.note }}</div>
               </div>
               <div class="text-right">
-                <div class="font-bold text-lg text-beige-900 font-maru">¥ {{ Number(item.amount || 0).toLocaleString() }}</div>
+                <div class="font-bold text-lg text-beigetone-900 font-maru">¥ {{ Number(item.amount || 0).toLocaleString() }}</div>
               </div>
             </div>
           </template>
@@ -501,30 +499,30 @@
     <div class="fixed bottom-6 left-6 z-40">
       <div v-if="showNavMenu" @click="showNavMenu = false" class="fixed inset-0 bg-black/20 backdrop-blur-xs z-30"></div>
 
-      <div v-if="showNavMenu" class="absolute bottom-16 left-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beige-200 min-w-[160px] space-y-1 z-40 transition-all duration-200">
-        <button @click="switchTab('itinerary')" :class="currentTab === 'itinerary' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
+      <div v-if="showNavMenu" class="absolute bottom-16 left-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beigetone-200 min-w-[160px] space-y-1 z-40 transition-all duration-200">
+        <button @click="switchTab('itinerary')" :class="currentTab === 'itinerary' ? 'bg-beigetone-800 text-white' : 'text-beigetone-800 hover:bg-beigetone-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
           <i class="fa-solid fa-map-location-dot w-5 text-center"></i>
           <span>行程表</span>
         </button>
-        <button @click="switchTab('drive')" :class="currentTab === 'drive' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
+        <button @click="switchTab('drive')" :class="currentTab === 'drive' ? 'bg-beigetone-800 text-white' : 'text-beigetone-800 hover:bg-beigetone-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
           <i class="fa-solid fa-car w-5 text-center"></i>
           <span>自駕</span>
         </button>
-        <button @click="switchTab('japanese')" :class="currentTab === 'japanese' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
+        <button @click="switchTab('japanese')" :class="currentTab === 'japanese' ? 'bg-beigetone-800 text-white' : 'text-beigetone-800 hover:bg-beigetone-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
           <i class="fa-solid fa-language w-5 text-center"></i>
           <span>實用日語</span>
         </button>
-        <button @click="switchTab('shopping')" :class="currentTab === 'shopping' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
+        <button @click="switchTab('shopping')" :class="currentTab === 'shopping' ? 'bg-beigetone-800 text-white' : 'text-beigetone-800 hover:bg-beigetone-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
           <i class="fa-solid fa-basket-shopping w-5 text-center"></i>
           <span>購物清單</span>
         </button>
-        <button @click="switchTab('expense')" :class="currentTab === 'expense' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
+        <button @click="switchTab('expense')" :class="currentTab === 'expense' ? 'bg-beigetone-800 text-white' : 'text-beigetone-800 hover:bg-beigetone-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
           <i class="fa-solid fa-coins w-5 text-center"></i>
           <span>累積花費</span>
         </button>
       </div>
 
-      <button @click="showNavMenu = !showNavMenu" class="w-14 h-14 bg-white text-beige-800 border border-beige-200 rounded-full shadow-xl flex items-center justify-center text-xl z-40 active:scale-95 transition hover:bg-beige-50">
+      <button @click="showNavMenu = !showNavMenu" class="w-14 h-14 bg-white text-beigetone-800 border border-beigetone-200 rounded-full shadow-xl flex items-center justify-center text-xl z-40 active:scale-95 transition hover:bg-beigetone-50">
         <i v-if="!showNavMenu" class="fa-solid fa-layer-group"></i>
         <i v-else class="fa-solid fa-xmark text-lg"></i>
       </button>
@@ -534,35 +532,31 @@
     <div v-if="currentTab === 'itinerary' || currentTab === 'drive'" class="fixed bottom-6 right-6 z-40">
       <div v-if="showAddMenu" @click="showAddMenu = false" class="fixed inset-0 bg-black/20 backdrop-blur-xs z-30"></div>
 
-      <!-- 類型懸浮選單 -->
-      <div v-if="showAddMenu" class="absolute bottom-16 right-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beige-200 min-w-[150px] space-y-1 z-40 transition-all duration-200">
+      <div v-if="showAddMenu" class="absolute bottom-16 right-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beigetone-200 min-w-[150px] space-y-1 z-40 transition-all duration-200">
         
-        <!-- 行程表類型選擇 -->
         <template v-if="currentTab === 'itinerary'">
-          <button v-for="cat in ['景點', '美食', '購物', '住宿', '航班', '其他']" :key="cat" @click="selectAddType(cat)" class="w-full px-3.5 py-2 rounded-xl flex items-center justify-between text-xs font-bold text-beige-800 hover:bg-beige-100 transition">
+          <button v-for="cat in ['景點', '美食', '購物', '住宿', '航班', '其他']" :key="cat" @click="selectAddType(cat)" class="w-full px-3.5 py-2 rounded-xl flex items-center justify-between text-xs font-bold text-beigetone-800 hover:bg-beigetone-100 transition">
             <span>{{ cat }}</span>
-            <i class="fa-solid fa-angle-right text-beige-400"></i>
+            <i class="fa-solid fa-angle-right text-beigetone-400"></i>
           </button>
         </template>
 
-        <!-- 自駕類型選擇 -->
         <template v-else-if="currentTab === 'drive'">
-          <button v-for="type in ['租車', '加油', '停車場', '過路費']" :key="type" @click="selectAddType(type)" class="w-full px-3.5 py-2 rounded-xl flex items-center justify-between text-xs font-bold text-beige-800 hover:bg-beige-100 transition">
+          <button v-for="type in ['租車', '加油', '停車場', '過路費']" :key="type" @click="selectAddType(type)" class="w-full px-3.5 py-2 rounded-xl flex items-center justify-between text-xs font-bold text-beigetone-800 hover:bg-beigetone-100 transition">
             <span>{{ type }}</span>
-            <i class="fa-solid fa-angle-right text-beige-400"></i>
+            <i class="fa-solid fa-angle-right text-beigetone-400"></i>
           </button>
         </template>
 
       </div>
 
-      <button @click="showAddMenu = !showAddMenu" class="w-14 h-14 bg-beige-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
+      <button @click="showAddMenu = !showAddMenu" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
         <i :class="showAddMenu ? 'fa-solid fa-xmark text-xl' : 'fa-solid fa-plus'"></i>
       </button>
     </div>
 
-    <!-- 購物、花費分頁的一般右下角新增按鈕 -->
     <div v-else class="fixed bottom-6 right-6 z-40">
-      <button @click="openAddModal()" class="w-14 h-14 bg-beige-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
+      <button @click="openAddModal()" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
         <i class="fa-solid fa-plus"></i>
       </button>
     </div>
@@ -576,17 +570,37 @@
     <div v-if="largeJapaneseItem" @click="largeJapaneseItem = null" class="fixed inset-0 bg-black/85 z-50 flex flex-col items-center justify-center p-6 text-center cursor-pointer">
       <div class="bg-white w-full max-w-sm rounded-3xl p-8 shadow-2xl space-y-4" @click.stop>
         <div class="text-xs text-accent-terracotta font-bold tracking-widest uppercase">請出示此畫面</div>
-        <div class="text-3xl font-bold text-beige-900 font-maru leading-snug">{{ largeJapaneseItem.jp }}</div>
-        <div class="text-sm text-beige-400">{{ largeJapaneseItem.kana }}</div>
-        <div class="text-base font-bold text-beige-800 pt-2 border-t border-beige-100">{{ largeJapaneseItem.zh }}</div>
+        <div class="text-3xl font-bold text-beigetone-900 font-maru leading-snug">{{ largeJapaneseItem.jp }}</div>
+        <div class="text-sm text-beigetone-400">{{ largeJapaneseItem.kana }}</div>
+        <div class="text-base font-bold text-beigetone-800 pt-2 border-t border-beigetone-100">{{ largeJapaneseItem.zh }}</div>
         
         <div class="flex gap-2 pt-2">
           <button @click="speakJapanese(largeJapaneseItem.jp)" class="flex-1 bg-accent-sage/10 hover:bg-accent-sage/20 text-accent-sage font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5">
             <i class="fa-solid fa-volume-high"></i> 播放聲音
           </button>
-          <button @click="largeJapaneseItem = null" class="flex-1 bg-beige-100 hover:bg-beige-200 text-beige-800 font-bold py-2.5 rounded-xl text-xs">
+          <button @click="largeJapaneseItem = null" class="flex-1 bg-beigetone-100 hover:bg-beigetone-200 text-beigetone-800 font-bold py-2.5 rounded-xl text-xs">
             關閉
           </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 修改日期彈窗 (月曆選擇器) -->
+    <div v-if="showDateModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end justify-center">
+      <div class="bg-white w-full max-w-md rounded-t-[28px] p-6 space-y-4 shadow-2xl">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-lg text-beigetone-900">修改 Day {{ selectedDayIndex + 1 }} 日期</h3>
+          <button @click="showDateModal = false" class="text-beigetone-400 hover:text-beigetone-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+
+        <div class="space-y-3">
+          <label class="text-xs font-bold text-beigetone-800 block">請從月曆選擇年月日：</label>
+          <input type="date" v-model="dateInputVal" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-4 py-3 text-base font-bold text-beigetone-900 focus:outline-none focus:border-beigetone-800">
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button @click="showDateModal = false" class="w-1/3 bg-beigetone-100 text-beigetone-800 font-bold py-3 rounded-2xl text-sm">取消</button>
+          <button @click="saveDayDate" class="flex-1 bg-beigetone-800 text-white font-bold py-3 rounded-2xl text-sm">確認修改</button>
         </div>
       </div>
     </div>
@@ -595,112 +609,108 @@
     <div v-if="showModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end justify-center">
       <div class="bg-white w-full max-w-md rounded-t-[28px] p-6 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
         <div class="flex justify-between items-center">
-          <h3 class="font-bold text-lg text-beige-900">{{ isEditing ? '編輯項目' : '新增項目' }}</h3>
-          <button @click="showModal = false" class="text-beige-400 hover:text-beige-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+          <h3 class="font-bold text-lg text-beigetone-900">{{ isEditing ? '編輯項目' : '新增項目' }}</h3>
+          <button @click="showModal = false" class="text-beigetone-400 hover:text-beigetone-800"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
 
         <!-- 1. 行程彈窗 -->
         <div v-if="currentTab === 'itinerary'" class="space-y-3">
-          <div class="flex justify-between items-center bg-beige-100 px-3 py-2 rounded-xl text-xs font-bold text-beige-800">
+          <div class="flex justify-between items-center bg-beigetone-100 px-3 py-2 rounded-xl text-xs font-bold text-beigetone-800">
             <span>類別：{{ formData.category }}</span>
           </div>
 
           <template v-if="formData.category === '航班'">
-            <input v-model="formData.flightNo" placeholder="航班號碼 (例: JX800)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.flightNo" placeholder="航班號碼 (例: JX800)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             <div class="flex gap-2">
-              <input v-model="formData.depAirport" placeholder="出發代碼 (例: TPE)" class="w-1/2 bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-              <input v-model="formData.depCn" placeholder="出發中文 (例: 桃園)" class="w-1/2 bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+              <input v-model="formData.depAirport" placeholder="出發代碼 (例: TPE)" class="w-1/2 bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+              <input v-model="formData.depCn" placeholder="出發中文 (例: 桃園)" class="w-1/2 bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             </div>
             <div class="flex gap-2">
-              <input v-model="formData.arrAirport" placeholder="目的代碼 (例: NRT)" class="w-1/2 bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-              <input v-model="formData.arrCn" placeholder="目的中文 (例: 成田)" class="w-1/2 bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+              <input v-model="formData.arrAirport" placeholder="目的代碼 (例: NRT)" class="w-1/2 bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+              <input v-model="formData.arrCn" placeholder="目的中文 (例: 成田)" class="w-1/2 bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             </div>
             <div class="flex gap-2">
-              <input v-model="formData.depTime" placeholder="起飛時間 (例: 08:15)" class="w-1/2 bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-              <input v-model="formData.arrTime" placeholder="抵達時間 (例: 12:30)" class="w-1/2 bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+              <input v-model="formData.depTime" placeholder="起飛時間 (例: 08:15)" class="w-1/2 bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+              <input v-model="formData.arrTime" placeholder="抵達時間 (例: 12:30)" class="w-1/2 bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             </div>
           </template>
 
           <template v-else>
-            <input v-model="formData.name" placeholder="名稱 / 地點 (例: 淺草寺)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.mapUrl" placeholder="Google Maps 導航連結 (選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.time" placeholder="營業時間 / 時間段" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.ticket" placeholder="門票 / 費用資訊" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <textarea v-model="formData.note" placeholder="特色 & 備註" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm h-20"></textarea>
+            <input v-model="formData.name" placeholder="名稱 / 地點 (例: 淺草寺)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapUrl" placeholder="Google Maps 導航連結 (選填)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.time" placeholder="營業時間 / 時間段" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.ticket" placeholder="門票 / 費用資訊" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <textarea v-model="formData.note" placeholder="特色 & 備註" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm h-20"></textarea>
           </template>
         </div>
 
         <!-- 2. 自駕彈窗 -->
         <div v-if="currentTab === 'drive'" class="space-y-3">
-          <div class="flex justify-between items-center bg-beige-100 px-3 py-2 rounded-xl text-xs font-bold text-beige-800">
+          <div class="flex justify-between items-center bg-beigetone-100 px-3 py-2 rounded-xl text-xs font-bold text-beigetone-800">
             <span>類型：{{ formData.type }}</span>
           </div>
 
-          <!-- 租車欄位 -->
           <template v-if="formData.type === '租車'">
-            <input v-model="formData.company" placeholder="租車公司名稱 (例: TOYOTA Rent a Car)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.carModel" placeholder="車型 / 車號 (例: Yaris / 沖繩 500)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.reservationNo" placeholder="預約號碼 (選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.mapCode" placeholder="取車門市 MapCode (選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.pickupStore" placeholder="取車門市名稱" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.pickupTime" placeholder="取車時間 (例: 9/6 10:00)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.returnStore" placeholder="還車門市名稱" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.returnTime" placeholder="還車時間 (例: 9/10 17:00)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.phone" placeholder="門市電話 (例: +81-476-32-1020)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.mapUrl" placeholder="Google Maps 取車點連結" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.company" placeholder="租車公司名稱 (例: TOYOTA Rent a Car)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.carModel" placeholder="車型 / 車號 (例: Yaris / 沖繩 500)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.reservationNo" placeholder="預約號碼 (選填)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapCode" placeholder="取車門市 MapCode (選填)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.pickupStore" placeholder="取車門市名稱" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.pickupTime" placeholder="取車時間 (例: 9/6 10:00)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.returnStore" placeholder="還車門市名稱" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.returnTime" placeholder="還車時間 (例: 9/10 17:00)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.phone" placeholder="門市電話 (例: +81-476-32-1020)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapUrl" placeholder="Google Maps 取車點連結" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
           </template>
 
-          <!-- 加油欄位 -->
           <template v-else-if="formData.type === '加油'">
-            <input v-model="formData.stationName" placeholder="加油站名稱 (例: ENEOS 成田機場前店)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.gasType" placeholder="油品種類 (例: Regular 赤色 / 柴油)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.mapCode" placeholder="MapCode (選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.mapUrl" placeholder="Google Maps 加油站連結" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <textarea v-model="formData.note" placeholder="備註 (例: 還車前記得在此加滿油並索取發票)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm h-16"></textarea>
+            <input v-model="formData.stationName" placeholder="加油站名稱 (例: ENEOS 成田機場前店)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.gasType" placeholder="油品種類 (例: Regular 赤色 / 柴油)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapCode" placeholder="MapCode (選填)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapUrl" placeholder="Google Maps 加油站連結" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <textarea v-model="formData.note" placeholder="備註 (例: 還車前記得在此加滿油並索取發票)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm h-16"></textarea>
           </template>
 
-          <!-- 停車場欄位 -->
           <template v-else-if="formData.type === '停車場'">
-            <input v-model="formData.parkingName" placeholder="停車場名稱 / 景點停車場" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.feeNote" placeholder="收費說明 (例: 1小時 ¥300 / 夜間最大上限 ¥800)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.mapUrl" placeholder="Google Maps 停車場連結" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <textarea v-model="formData.note" placeholder="備註 (例: 車位號碼 12 號、只能付現)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm h-16"></textarea>
+            <input v-model="formData.parkingName" placeholder="停車場名稱 / 景點停車場" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.feeNote" placeholder="收費說明 (例: 1小時 ¥300 / 夜間最大上限 ¥800)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapUrl" placeholder="Google Maps 停車場連結" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <textarea v-model="formData.note" placeholder="備註 (例: 車位號碼 12 號、只能付現)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm h-16"></textarea>
           </template>
 
-          <!-- 過路費欄位 -->
           <template v-else-if="formData.type === '過路費'">
-            <input v-model="formData.route" placeholder="路線 / 區間 (例: 成田IC ➔ 首都高)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input type="number" v-model="formData.amount" placeholder="金額 (日幣 JPY)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.note" placeholder="備註 (例: ETC 自動扣款)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.route" placeholder="路線 / 區間 (例: 成田IC ➔ 首都高)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input type="number" v-model="formData.amount" placeholder="金額 (日幣 JPY)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.note" placeholder="備註 (例: ETC 自動扣款)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
           </template>
         </div>
 
         <!-- 3. 購物彈窗 -->
         <div v-if="currentTab === 'shopping'" class="space-y-3">
-          <input v-model="formData.name" placeholder="商品名稱" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-          <input type="number" v-model="formData.price" placeholder="預估金額 (日幣 JPY，選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-          <input v-model="formData.location" placeholder="購買地點 / 店名 (例: 唐吉訶德 澀谷店)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-          <input v-model="formData.mapUrl" placeholder="Google Maps 導航連結 (選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+          <input v-model="formData.name" placeholder="商品名稱" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+          <input type="number" v-model="formData.price" placeholder="預估金額 (日幣 JPY，選填)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+          <input v-model="formData.location" placeholder="購買地點 / 店名 (例: 唐吉訶德 澀谷店)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+          <input v-model="formData.mapUrl" placeholder="Google Maps 導航連結 (選填)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
           <div>
-            <label class="text-xs font-bold text-beige-800 block mb-1">商品照片</label>
-            <input type="file" @change="handleImageUpload" class="w-full text-xs text-beige-800" accept="image/*">
+            <label class="text-xs font-bold text-beigetone-800 block mb-1">商品照片</label>
+            <input type="file" @change="handleImageUpload" class="w-full text-xs text-beigetone-800" accept="image/*">
           </div>
         </div>
 
         <!-- 4. 花費彈窗 -->
         <div v-if="currentTab === 'expense'" class="space-y-3">
-          <select v-model="formData.category" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+          <select v-model="formData.category" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             <option>交通</option><option>飲食</option><option>住宿</option><option>門票</option><option>購物</option><option>租車/加油</option><option>其他</option>
           </select>
-          <input v-model="formData.name" placeholder="項目名稱" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-          <input type="number" v-model="formData.amount" placeholder="金額 (日幣 JPY)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
-          <select v-model="formData.payMethod" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
+          <input v-model="formData.name" placeholder="項目名稱" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+          <input type="number" v-model="formData.amount" placeholder="金額 (日幣 JPY)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+          <select v-model="formData.payMethod" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             <option>現金</option><option>信用卡</option>
           </select>
           <div>
-            <label class="text-xs font-bold text-beige-800 block mb-1">收據 / 明細 / 消費照片</label>
-            <input type="file" @change="handleImageUpload" class="w-full text-xs text-beige-800" accept="image/*">
-            <div v-if="formData.image" class="mt-2 relative w-20 h-20 rounded-xl overflow-hidden border border-beige-200">
+            <label class="text-xs font-bold text-beigetone-800 block mb-1">收據 / 明細 / 消費照片</label>
+            <input type="file" @change="handleImageUpload" class="w-full text-xs text-beigetone-800" accept="image/*">
+            <div v-if="formData.image" class="mt-2 relative w-20 h-20 rounded-xl overflow-hidden border border-beigetone-200">
               <img :src="formData.image" class="w-full h-full object-cover">
               <button @click="formData.image = null" class="absolute top-1 right-1 bg-black/60 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px]">
                 <i class="fa-solid fa-xmark"></i>
@@ -711,7 +721,7 @@
 
         <div class="flex gap-2 pt-2">
           <button v-if="isEditing" @click="confirmDelete" class="w-1/3 bg-red-100 text-red-600 font-bold py-2.5 rounded-xl text-sm">刪除</button>
-          <button @click="saveData" class="flex-1 bg-beige-800 text-white font-bold py-2.5 rounded-xl text-sm">儲存</button>
+          <button @click="saveData" class="flex-1 bg-beigetone-800 text-white font-bold py-2.5 rounded-xl text-sm">儲存</button>
         </div>
       </div>
     </div>
@@ -744,6 +754,8 @@
       const bannerUrl = ref('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1920&auto=format&fit=crop');
       const selectedDayIndex = ref(0);
       const showModal = ref(false);
+      const showDateModal = ref(false);
+      const dateInputVal = ref('');
       const isEditing = ref(false);
       const previewImageSrc = ref(null);
       const largeJapaneseItem = ref(null);
@@ -790,7 +802,6 @@
         { id: '1', category: '飲食', name: '敘敘苑燒肉', amount: 12000, payMethod: '信用卡', date: '2026-09-06', image: '' }
       ]));
 
-      // 實用日語短句清單資料 (四大情境，每組皆擴充至10句以上)
       const japanesePhrases = ref([
         {
           category: '購物與結帳',
@@ -888,13 +899,12 @@
         largeJapaneseItem.value = item;
       };
 
-      // 瀏覽器內建語音朗讀日文
       const speakJapanese = (text) => {
         if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel(); // 停止先前的播放
+          window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
           utterance.lang = 'ja-JP';
-          utterance.rate = 0.9; // 稍微放慢語速方便聽清楚
+          utterance.rate = 0.9;
           window.speechSynthesis.speak(utterance);
         } else {
           alert('您的瀏覽器不支援語音播放功能');
@@ -909,12 +919,27 @@
         }
       };
 
-      const editDayDate = () => {
-        const cur = days.value[selectedDayIndex.value];
-        const input = prompt(`請修改 Day ${selectedDayIndex.value + 1} 的日期與星期：`, cur.dateDisplay || '9/6 (日)');
-        if (input) {
-          days.value[selectedDayIndex.value].dateDisplay = input;
+      const openDateModal = () => {
+        const cur = days.value[selectedDayIndex.value]?.dateDisplay || '9/6 (日)';
+        // 嘗試將現有字串轉成 YYYY-MM-DD 格式填入日曆，預設若失敗則給今天
+        const now = new Date();
+        const year = now.getFullYear();
+        dateInputVal.value = `${year}-09-06`;
+        showDateModal.value = true;
+      };
+
+      const saveDayDate = () => {
+        if (!dateInputVal.value) return;
+        const parts = dateInputVal.value.split('-'); // [YYYY, MM, DD]
+        if (parts.length === 3) {
+          const m = parseInt(parts[1], 10);
+          const d = parseInt(parts[2], 10);
+          const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+          const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+          const wk = weekdays[dateObj.getDay()];
+          days.value[selectedDayIndex.value].dateDisplay = `${m}/${d} (${wk})`;
         }
+        showDateModal.value = false;
       };
 
       const deleteCurrentDay = () => {
@@ -1022,9 +1047,9 @@
         isAuthenticated, passwordInput, passwordError, checkPassword,
         currentTab, showNavMenu, showAddMenu, switchTab, bannerUrl, selectedDayIndex, days,
         scheduleData, currentDaySchedule, driveList, shoppingList, expenses, totalExpense, japanesePhrases,
-        selectedJpCategory, showModal, isEditing, formData, previewImageSrc, largeJapaneseItem, uploadBanner, handleImageUpload,
+        selectedJpCategory, showModal, showDateModal, dateInputVal, isEditing, formData, previewImageSrc, largeJapaneseItem, uploadBanner, handleImageUpload,
         openMap, callPhone, previewImg, showLargeJapanese, speakJapanese, getTransportIcon, selectAddType, openAddModal, openEditModal, saveData, confirmDelete,
-        addNewDay, editDayDate, deleteCurrentDay
+        addNewDay, openDateModal, saveDayDate, deleteCurrentDay
       };
     }
   }).mount('#app');
