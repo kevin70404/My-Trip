@@ -55,7 +55,7 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="max-w-md mx-auto min-h-screen bg-beige-100 shadow-2xl relative pb-20">
+<body class="max-w-md mx-auto min-h-screen bg-beige-100 shadow-2xl relative pb-24">
 
 <div id="app">
 
@@ -86,32 +86,17 @@
   <!-- ================= 主 Web App 畫面 ================= -->
   <template v-else>
     <!-- 頁首 Banner -->
-    <div class="relative w-full h-[250px] bg-beige-300 overflow-hidden">
+    <div class="relative w-full h-[220px] bg-beige-300 overflow-hidden">
       <img :src="bannerUrl" class="w-full h-full object-cover object-center" alt="旅遊 Banner">
       
       <label class="absolute top-4 left-4 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full text-xs text-beige-800 shadow cursor-pointer hover:bg-white transition">
         <i class="fa-solid fa-camera mr-1"></i> 更換封面
         <input type="file" @change="uploadBanner" class="hidden" accept="image/*">
       </label>
-
-      <div class="absolute bottom-6 right-4 bg-white/80 backdrop-blur-md rounded-2xl p-1.5 shadow-lg flex gap-1 z-20">
-        <button @click="currentTab = 'itinerary'" :class="currentTab === 'itinerary' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-200'" class="w-10 h-10 rounded-xl flex items-center justify-center transition">
-          <i class="fa-solid fa-map-location-dot text-lg"></i>
-        </button>
-        <button @click="currentTab = 'info'" :class="currentTab === 'info' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-200'" class="w-10 h-10 rounded-xl flex items-center justify-center transition">
-          <i class="fa-solid fa-circle-info text-lg"></i>
-        </button>
-        <button @click="currentTab = 'shopping'" :class="currentTab === 'shopping' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-200'" class="w-10 h-10 rounded-xl flex items-center justify-center transition">
-          <i class="fa-solid fa-basket-shopping text-lg"></i>
-        </button>
-        <button @click="currentTab = 'expense'" :class="currentTab === 'expense' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-200'" class="w-10 h-10 rounded-xl flex items-center justify-center transition">
-          <i class="fa-solid fa-coins text-lg"></i>
-        </button>
-      </div>
     </div>
 
     <!-- 主內容區域 -->
-    <div class="relative -mt-5 bg-beige-50 rounded-t-[28px] px-4 pt-6 pb-12 z-10 min-h-[calc(100vh-230px)] shadow-inner">
+    <div class="relative -mt-5 bg-beige-50 rounded-t-[28px] px-4 pt-6 pb-12 z-10 min-h-[calc(100vh-200px)] shadow-inner">
       
       <!-- 1. 每日行程表 -->
       <div v-if="currentTab === 'itinerary'">
@@ -202,7 +187,6 @@
                   <span class="text-xs text-beige-400 font-medium">{{ item.category }}</span>
                 </div>
                 
-                <!-- 導航按鈕 -->
                 <button @click="openMap(item.mapUrl, item.name)" class="text-xs bg-beige-100 hover:bg-beige-200 text-beige-800 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 transition">
                   <i class="fa-solid fa-compass text-accent-terracotta"></i> 導航
                 </button>
@@ -254,7 +238,6 @@
           <div v-for="item in shoppingList" :key="item.id" class="bg-white rounded-2xl p-3 shadow-sm border border-beige-200 flex flex-col justify-between relative group h-full">
             
             <div class="flex-1">
-              <!-- 商品圖片 -->
               <div class="w-full h-32 bg-beige-100 rounded-xl overflow-hidden mb-2.5 relative flex-shrink-0">
                 <img v-if="item.image" :src="item.image" class="w-full h-full object-cover">
                 <div v-else class="w-full h-full flex items-center justify-center text-beige-300">
@@ -262,15 +245,12 @@
                 </div>
               </div>
 
-              <!-- 商品名稱 (完整顯示不截斷) -->
               <div class="font-bold text-sm text-beige-900 leading-snug break-words mb-1.5">{{ item.name }}</div>
 
-              <!-- 價格標示 -->
               <div v-if="item.price" class="text-xs font-bold text-accent-terracotta font-maru mb-2">
                 ¥ {{ Number(item.price).toLocaleString() }}
               </div>
 
-              <!-- 購買地點與導航 -->
               <div v-if="item.location" class="text-xs text-beige-800 pt-2 border-t border-beige-100 space-y-1.5">
                 <div class="text-[11px] text-beige-800 break-words leading-tight flex items-start gap-1">
                   <i class="fa-solid fa-location-dot text-beige-400 mt-0.5 flex-shrink-0"></i>
@@ -283,7 +263,6 @@
               </div>
             </div>
 
-            <!-- 編輯按鈕 -->
             <button @click="openEditModal(item)" class="absolute top-2 right-2 bg-black/40 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs backdrop-blur-xs hover:bg-black/60 transition z-10">
               <i class="fa-solid fa-pen text-[10px]"></i>
             </button>
@@ -292,7 +271,7 @@
         </div>
       </div>
 
-      <!-- 4. 花費記帳 Tab (已支援照片顯示與縮圖預覽) -->
+      <!-- 4. 累積花費 Tab -->
       <div v-if="currentTab === 'expense'" class="space-y-4">
         <div class="bg-beige-800 text-white rounded-2xl p-5 shadow-lg text-center">
           <div class="text-xs text-beige-300 font-medium mb-1">累積總花費</div>
@@ -303,9 +282,7 @@
         <div class="space-y-2">
           <div v-for="exp in expenses" :key="exp.id" class="bg-white rounded-2xl p-3 shadow-sm border border-beige-200 flex justify-between items-center gap-3">
             
-            <!-- 左側：照片與文字資訊 -->
             <div class="flex items-center gap-3 overflow-hidden">
-              <!-- 縮圖 -->
               <div v-if="exp.image" @click="previewImg(exp.image)" class="w-14 h-14 rounded-xl overflow-hidden bg-beige-100 flex-shrink-0 cursor-pointer relative group">
                 <img :src="exp.image" class="w-full h-full object-cover">
                 <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white text-xs">
@@ -313,7 +290,6 @@
                 </div>
               </div>
 
-              <!-- 名稱與類別 -->
               <div class="min-w-0">
                 <div class="font-bold text-sm text-beige-900 break-words leading-snug">{{ exp.name }}</div>
                 <div class="text-[11px] text-beige-400 gap-1.5 flex flex-wrap items-center mt-0.5">
@@ -324,7 +300,6 @@
               </div>
             </div>
 
-            <!-- 右側：金額與操作按鈕 -->
             <div class="flex items-center gap-2 flex-shrink-0">
               <div class="text-right">
                 <div class="font-bold text-beige-900 font-maru">¥ {{ Number(exp.amount).toLocaleString() }}</div>
@@ -339,6 +314,38 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- ================= 左下角浮動分頁選單 (新功能) ================= -->
+    <div class="fixed bottom-6 left-6 z-40">
+      <!-- 點擊選單外部時的遮罩 (選單開啟時出現) -->
+      <div v-if="showNavMenu" @click="showNavMenu = false" class="fixed inset-0 bg-black/20 backdrop-blur-xs z-30"></div>
+
+      <!-- 懸浮彈出選單內容 -->
+      <div v-if="showNavMenu" class="absolute bottom-16 left-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beige-200 min-w-[160px] space-y-1 z-40 transition-all duration-200 animate-fade-in">
+        <button @click="switchTab('itinerary')" :class="currentTab === 'itinerary' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
+          <i class="fa-solid fa-map-location-dot w-5 text-center"></i>
+          <span>行程表</span>
+        </button>
+        <button @click="switchTab('info')" :class="currentTab === 'info' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
+          <i class="fa-solid fa-circle-info w-5 text-center"></i>
+          <span>實用資訊</span>
+        </button>
+        <button @click="switchTab('shopping')" :class="currentTab === 'shopping' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
+          <i class="fa-solid fa-basket-shopping w-5 text-center"></i>
+          <span>購物清單</span>
+        </button>
+        <button @click="switchTab('expense')" :class="currentTab === 'expense' ? 'bg-beige-800 text-white' : 'text-beige-800 hover:bg-beige-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
+          <i class="fa-solid fa-coins w-5 text-center"></i>
+          <span>累積花費</span>
+        </button>
+      </div>
+
+      <!-- 左下角主要觸發按鈕 -->
+      <button @click="showNavMenu = !showNavMenu" class="w-14 h-14 bg-white text-beige-800 border border-beige-200 rounded-full shadow-xl flex items-center justify-center text-xl z-40 active:scale-95 transition hover:bg-beige-50">
+        <i v-if="!showNavMenu" class="fa-solid fa-layer-group"></i>
+        <i v-else class="fa-solid fa-xmark text-lg"></i>
+      </button>
     </div>
 
     <!-- 右下角浮動新增按鈕 (+) -->
@@ -366,7 +373,6 @@
             <option>景點</option><option>美食</option><option>購物</option><option>住宿</option><option>航班</option><option>其他</option>
           </select>
 
-          <!-- 航班設定 -->
           <template v-if="formData.category === '航班'">
             <input v-model="formData.flightNo" placeholder="航班號碼 (例: JX800)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
             <div class="flex gap-2">
@@ -383,7 +389,6 @@
             </div>
           </template>
 
-          <!-- 一般行程 -->
           <template v-else>
             <input v-model="formData.name" placeholder="名稱 / 地點 (例: 淺草寺)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
             <input v-model="formData.mapUrl" placeholder="Google Maps 導航連結 (選填)" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
@@ -406,7 +411,7 @@
           </div>
         </div>
 
-        <!-- 3. 花費彈窗 (加入拍照/照片選擇) -->
+        <!-- 3. 花費彈窗 -->
         <div v-if="currentTab === 'expense'" class="space-y-3">
           <select v-model="formData.category" class="w-full bg-beige-50 border border-beige-200 rounded-xl px-3 py-2 text-sm">
             <option>交通</option><option>飲食</option><option>住宿</option><option>門票</option><option>購物</option><option>其他</option>
@@ -417,7 +422,6 @@
             <option>現金</option><option>信用卡</option>
           </select>
           
-          <!-- 花費照片 -->
           <div>
             <label class="text-xs font-bold text-beige-800 block mb-1">收據 / 明細 / 消費照片</label>
             <input type="file" @change="handleImageUpload" class="w-full text-xs text-beige-800" accept="image/*">
@@ -460,12 +464,18 @@
       };
 
       const currentTab = ref('itinerary');
+      const showNavMenu = ref(false); // 控制懸浮分頁選單開關
       const bannerUrl = ref('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1920&auto=format&fit=crop');
       const jpyInput = ref(10000);
       const selectedDayIndex = ref(0);
       const showModal = ref(false);
       const isEditing = ref(false);
       const previewImageSrc = ref(null);
+
+      const switchTab = (tab) => {
+        currentTab.value = tab;
+        showNavMenu.value = false; // 切換分頁後自動收起選單
+      };
 
       const loadSavedData = (key, fallback) => {
         try {
@@ -626,17 +636,13 @@
         }
       };
 
-      const deleteExpenseItem = (id) => {
-        expenses.value = expenses.value.filter(i => i.id !== id);
-      };
-
       return {
         isAuthenticated, passwordInput, passwordError, checkPassword,
-        currentTab, bannerUrl, jpyInput, selectedDayIndex, days,
+        currentTab, showNavMenu, switchTab, bannerUrl, jpyInput, selectedDayIndex, days,
         scheduleData, currentDaySchedule, shoppingList, expenses, totalExpense,
         showModal, isEditing, formData, previewImageSrc, uploadBanner, handleImageUpload,
         openMap, previewImg, getTransportIcon, openAddModal, openEditModal, saveData, confirmDelete,
-        addNewDay, editDayDate, deleteCurrentDay, deleteExpenseItem
+        addNewDay, editDayDate, deleteCurrentDay
       };
     }
   }).mount('#app');
