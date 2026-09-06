@@ -16,10 +16,10 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (已更新加入 signInWithRedirect 與 getRedirectResult) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     // 已替換為您的 Firebase 專案設定
@@ -37,7 +37,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    window.firebaseApp = { auth, db, GoogleAuthProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, signOut, doc, setDoc, getDoc, onSnapshot };
+    window.firebaseApp = { auth, db, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signInAnonymously, onAuthStateChanged, signOut, doc, setDoc, getDoc, onSnapshot };
   </script>
 
   <script>
@@ -1012,7 +1012,7 @@
 </div>
 
 <script>
-  const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
+  const { createApp, ref, computed, watch, onMounted } = Vue;
 
   createApp({
     setup() {
@@ -1032,17 +1032,15 @@
         }
       };
 
-      // Firebase 登入設定
+      // 改用 signInWithRedirect 進行 Google 登入
       const loginWithGoogle = async () => {
         const fb = window.firebaseApp;
         if (!fb) return alert('Firebase 尚未初始化');
         try {
           const provider = new fb.GoogleAuthProvider();
-          const result = await fb.signInWithPopup(fb.auth, provider);
-          userEmail.value = result.user.email;
-          isAuthenticated.value = true;
+          await fb.signInWithRedirect(fb.auth, provider);
         } catch (e) {
-          alert('Google 登入失敗: ' + e.message);
+          alert('Google 登入導向失敗: ' + e.message);
         }
       };
 
@@ -1064,6 +1062,32 @@
         isAuthenticated.value = false;
         currentProjectId.value = null;
       };
+
+      // 頁面載入時檢查 redirect 結果與驗證狀態
+      onMounted(() => {
+        const fb = window.firebaseApp;
+        if (!fb) return;
+
+        // 1. 處理重新導向回來後的驗證結果
+        fb.getRedirectResult(fb.auth)
+          .then((result) => {
+            if (result && result.user) {
+              userEmail.value = result.user.email;
+              isAuthenticated.value = true;
+            }
+          })
+          .catch((error) => {
+            console.error("Redirect login error:", error);
+          });
+
+        // 2. 監聽 Firebase 登入狀態
+        fb.onAuthStateChanged(fb.auth, (user) => {
+          if (user) {
+            isAuthenticated.value = true;
+            userEmail.value = user.email || (user.isAnonymous ? '匿名協作者' : '已登入使用者');
+          }
+        });
+      });
 
       // 預設專案資料清單
       const getDefaultProjects = () => [{
