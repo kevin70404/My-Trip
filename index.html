@@ -22,14 +22,15 @@
     import { getAuth, GoogleAuthProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
     import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    // TODO: 請替換成您自己的 Firebase 專案設定
+    // 已替換為您的 Firebase 專案設定[cite: 8]
     const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_AUTH_DOMAIN",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_STORAGE_BUCKET",
-      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-      appId: "YOUR_APP_ID"
+      apiKey: "AIzaSyDh95N7ieaiyRkPJBn-MQynqdGQ-Wh-sTE",
+      authDomain: "web-app-ecf51.firebaseapp.com",
+      projectId: "web-app-ecf51",
+      storageBucket: "web-app-ecf51.firebasestorage.app",
+      messagingSenderId: "781452045981",
+      appId: "1:781452045981:web:729475b71d44ac6a59ee74",
+      measurementId: "G-7YWLFG6TME"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -1701,11 +1702,12 @@
           shoppingList.value = list;
         } else if (currentTab.value === 'expense') {
           const list = [...expenses.value];
+          const todayStr = new Date().toISOString().split('T')[0];
           if (isEditing.value) {
             const idx = list.findIndex(i => i.id === formData.value.id);
             if (idx !== -1) list[idx] = { ...formData.value };
           } else {
-            list.push({ ...formData.value, id: Date.now().toString(), date: new Date().toISOString().split('T')[0] });
+            list.push({ ...formData.value, id: Date.now().toString(), date: formData.value.date || todayStr });
           }
           expenses.value = list;
         }
@@ -1713,11 +1715,13 @@
       };
 
       const confirmDelete = () => {
-        if (confirm('確定要刪除這筆資料嗎？')) {
+        if (confirm('確定要刪除這個項目嗎？')) {
           if (currentTab.value === 'itinerary') {
             const sch = { ...scheduleData.value };
-            sch[selectedDayIndex.value] = sch[selectedDayIndex.value].filter(i => i.id !== formData.value.id);
-            scheduleData.value = sch;
+            if (sch[selectedDayIndex.value]) {
+              sch[selectedDayIndex.value] = sch[selectedDayIndex.value].filter(i => i.id !== formData.value.id);
+              scheduleData.value = sch;
+            }
           } else if (currentTab.value === 'drive') {
             driveList.value = driveList.value.filter(i => i.id !== formData.value.id);
           } else if (currentTab.value === 'shopping') {
@@ -1731,20 +1735,23 @@
 
       return {
         isAuthenticated, passwordInput, passwordError, checkPassword,
-        userEmail, isSaving, loginWithGoogle, loginAnonymouslyUser, logoutFirebase,
-        projects, activeProjects, endedProjects, currentProjectId, showProjectModal, isEditingProject, newProjectForm, 
-        openNewProjectModal, openEditProjectModal, saveProject, selectProject, deleteProject,
-        currentTab, showNavMenu, showAddMenu, switchTab, bannerUrl, selectedDayIndex, days,
-        scheduleData, currentDaySchedule, driveList, shoppingList, expenses, totalExpense, japanesePhrases,
-        prepCategories, expandedPrepCategories, togglePrepCategory, getCompletedPrepCount, deletePrepCategory, deletePrepItem,
-        prepIcons, showPrepCatModal, editingPrepCatId, prepCatForm, openPrepCategoryModal, savePrepCategory, openAddPrepItemModal,
-        draggedIndex, onDragStart, onDragOver, onDrop, onDragEnd, onTouchStart, onTouchMove, onTouchEnd,
-        selectedJpCategory, showModal, showDateModal, dateInputVal, isEditing, formData, previewImageSrc, largeJapaneseItem, uploadBanner, handleImageUpload,
-        openMap, callPhone, previewImg, showLargeJapanese, speakJapanese, selectAddType, openAddModal, openEditModal, saveData, confirmDelete,
-        addNewDay, openDateModal, saveDayDate, deleteCurrentDay
+        loginWithGoogle, loginAnonymouslyUser, logoutFirebase, userEmail, isSaving,
+        projects, currentProjectId, activeProjects, endedProjects, selectProject, deleteProject,
+        showProjectModal, isEditingProject, newProjectForm, openNewProjectModal, openEditProjectModal, saveProject,
+        bannerUrl, days, scheduleData, prepCategories, driveList, shoppingList, expenses,
+        currentTab, showNavMenu, showAddMenu, selectedDayIndex, switchTab,
+        currentDaySchedule, togglePrepCategory, getCompletedPrepCount, openAddPrepItemModal,
+        deletePrepCategory, deletePrepItem, openMap, callPhone, previewImg, showLargeJapanese,
+        speakJapanese, addNewDay, openDateModal, showDateModal, dateInputVal, saveDayDate, deleteCurrentDay,
+        uploadBanner, handleImageUpload, selectAddType, openAddModal, openEditModal, showModal,
+        isEditing, formData, saveData, confirmDelete, draggedIndex, onDragStart, onDragOver,
+        onDrop, onDragEnd, onTouchStart, onTouchMove, onTouchEnd, prepIcons, showPrepCatModal,
+        editingPrepCatId, prepCatForm, openPrepCategoryModal, savePrepCategory, expandedPrepCategories,
+        japanesePhrases, previewImageSrc, largeJapaneseItem, selectedJpCategory, totalExpense
       };
     }
   }).mount('#app');
 </script>
+
 </body>
 </html>
