@@ -65,6 +65,15 @@
       opacity: 0.5;
       transform: scale(0.98);
     }
+    /* 防止手機長按選取文字與出現彈窗 */
+    .touch-none-select {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: pan-y;
+    }
   </style>
 </head>
 <body class="max-w-md mx-auto min-h-screen bg-beigetone-100 shadow-2xl relative pb-24">
@@ -229,7 +238,7 @@
         <div class="bg-beigetone-800 text-white rounded-2xl p-4 shadow-sm flex items-center justify-between">
           <div>
             <h3 class="font-bold text-base">行李與行前準備</h3>
-            <p class="text-xs text-beigetone-300 mt-0.5">可長按拖拉圖卡調整順序，點擊可展開項目</p>
+            <p class="text-xs text-beigetone-300 mt-0.5">可按住握把圖示拖拉調整順序，點擊可展開項目</p>
           </div>
           <button @click="openPrepCategoryModal()" class="bg-white text-beigetone-800 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-beigetone-100 transition">
             <i class="fa-solid fa-plus mr-1"></i>新增類別
@@ -243,16 +252,23 @@
         <!-- 可拖拉圖卡區域 -->
         <div class="space-y-3">
           <div v-for="(cat, index) in prepCategories" :key="cat.id"
+               :data-index="index"
                draggable="true"
                @dragstart="onDragStart(index)"
                @dragover.prevent
                @drop="onDrop(index)"
-               class="bg-white rounded-2xl border border-beigetone-200 shadow-sm overflow-hidden transition-transform duration-150">
+               :class="{ 'dragging': draggedIndex === index }"
+               class="prep-card bg-white rounded-2xl border border-beigetone-200 shadow-sm overflow-hidden transition-transform duration-150 touch-none-select">
             
             <!-- 類別圖卡 header -->
             <div @click="togglePrepCategory(cat.id)" class="p-4 bg-beigetone-50 flex items-center justify-between cursor-pointer hover:bg-beigetone-100/60 transition">
               <div class="flex items-center gap-2.5">
-                <i class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing mr-1" @click.stop title="按住拖拉排序"></i>
+                <i class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing mr-1 p-2 touch-none" 
+                   @click.stop 
+                   @touchstart="onTouchStart(index, $event)"
+                   @touchmove="onTouchMove($event)"
+                   @touchend="onTouchEnd"
+                   title="按住拖拉排序"></i>
                 <i :class="cat.icon || 'fa-solid fa-suitcase'" class="text-accent-terracotta text-base"></i>
                 <span class="font-bold text-sm text-beigetone-900">{{ cat.title }}</span>
                 <span class="text-xs text-beigetone-400">({{ getCompletedPrepCount(cat) }}/{{ cat.items.length }})</span>
@@ -912,7 +928,7 @@
         {
           id: '2',
           title: '個人藥品與日常用品',
-          icon: 'fa-solid fa-[#EFE6DC] fa-briefcase-medical',
+          icon: 'fa-solid fa-briefcase-medical',
           items: [
             { id: '2-1', name: '個人常備藥品 / 腸胃藥', completed: false },
             { id: '2-2', name: '雨具 / 折疊傘', completed: false }
@@ -920,7 +936,7 @@
         }
       ]));
 
-      // 拖拉排序邏輯
+      // 桌面與移動端拖拉排序邏輯
       const draggedIndex = ref(null);
       const onDragStart = (index) => {
         draggedIndex.value = index;
@@ -930,6 +946,36 @@
           const item = prepCategories.value.splice(draggedIndex.value, 1)[0];
           prepCategories.value.splice(targetIndex, 0, item);
         }
+        draggedIndex.value = null;
+      };
+
+      // 移動端 Touch 觸控事件專用邏輯
+      const touchStartIndex = ref(null);
+      const onTouchStart = (index, e) => {
+        touchStartIndex.value = index;
+        draggedIndex.value = index;
+      };
+
+      const onTouchMove = (e) => {
+        if (touchStartIndex.value === null) return;
+        const touch = e.touches[0];
+        const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (!targetEl) return;
+
+        const cardEl = targetEl.closest('.prep-card');
+        if (cardEl && cardEl.dataset.index !== undefined) {
+          const targetIndex = parseInt(cardEl.dataset.index, 10);
+          if (targetIndex !== touchStartIndex.value && !isNaN(targetIndex)) {
+            const item = prepCategories.value.splice(touchStartIndex.value, 1)[0];
+            prepCategories.value.splice(targetIndex, 0, item);
+            touchStartIndex.value = targetIndex;
+            draggedIndex.value = targetIndex;
+          }
+        }
+      };
+
+      const onTouchEnd = () => {
+        touchStartIndex.value = null;
         draggedIndex.value = null;
       };
 
@@ -1287,7 +1333,7 @@
         scheduleData, currentDaySchedule, driveList, shoppingList, expenses, totalExpense, japanesePhrases,
         prepCategories, expandedPrepCategories, togglePrepCategory, getCompletedPrepCount, deletePrepCategory, deletePrepItem,
         prepIcons, showPrepCatModal, editingPrepCatId, prepCatForm, openPrepCategoryModal, savePrepCategory, openAddPrepItemModal,
-        onDragStart, onDrop,
+        draggedIndex, onDragStart, onDrop, onTouchStart, onTouchMove, onTouchEnd,
         selectedJpCategory, showModal, showDateModal, dateInputVal, isEditing, formData, previewImageSrc, largeJapaneseItem, uploadBanner, handleImageUpload,
         openMap, callPhone, previewImg, showLargeJapanese, speakJapanese, selectAddType, openAddModal, openEditModal, saveData, confirmDelete,
         addNewDay, openDateModal, saveDayDate, deleteCurrentDay
