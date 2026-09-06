@@ -253,7 +253,7 @@
             <!-- 類別圖卡 header -->
             <div @click="togglePrepCategory(cat.id)" class="p-4 bg-beigetone-50 flex items-center justify-between cursor-pointer hover:bg-beigetone-100/60 transition gap-2">
               <div class="flex items-center gap-2 min-w-0 flex-1">
-                <!-- 拖拉握把：限定只有這裡能觸發拖拽 -->
+                <!-- 拖拉握把：修正點擊阻止冒泡事件 -->
                 <i class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing p-1.5 touch-none touch-none-select flex-shrink-0" 
                    draggable="true"
                    @dragstart="onDragStart(index, $event)"
@@ -263,20 +263,20 @@
                    @touchstart="onTouchStart(index, $event)"
                    @touchmove="onTouchMove($event)"
                    @touchend="onTouchEnd"
-                   @click.stop
+                   @click.stop.prevent
                    title="按住拖拉排序"></i>
                 <i :class="cat.icon || 'fa-solid fa-suitcase'" class="text-accent-terracotta text-base flex-shrink-0"></i>
                 <span class="font-bold text-sm text-beigetone-900 truncate">{{ cat.title }}</span>
                 <span class="text-xs text-beigetone-400 flex-shrink-0">({{ getCompletedPrepCount(cat) }}/{{ cat.items.length }})</span>
               </div>
               <div class="flex items-center gap-1.5 flex-shrink-0">
-                <button @click.stop="openPrepCategoryModal(cat)" class="text-beigetone-400 hover:text-beigetone-800 p-1 text-xs" title="編輯類別">
+                <button @click.stop.prevent="openPrepCategoryModal(cat)" class="text-beigetone-400 hover:text-beigetone-800 p-1 text-xs" title="編輯類別">
                   <i class="fa-solid fa-pen"></i>
                 </button>
-                <button @click.stop="openAddPrepItemModal(cat)" class="text-xs bg-beigetone-200/80 text-beigetone-800 px-2.5 py-1 rounded-lg font-medium hover:bg-beigetone-300 transition whitespace-nowrap">
+                <button @click.stop.prevent="openAddPrepItemModal(cat)" class="text-xs bg-beigetone-200/80 text-beigetone-800 px-2.5 py-1 rounded-lg font-medium hover:bg-beigetone-300 transition whitespace-nowrap">
                   + 項目
                 </button>
-                <button @click.stop="deletePrepCategory(cat.id)" class="text-beigetone-300 hover:text-red-500 p-1 text-xs" title="刪除類別">
+                <button @click.stop.prevent="deletePrepCategory(cat.id)" class="text-beigetone-300 hover:text-red-500 p-1 text-xs" title="刪除類別">
                   <i class="fa-solid fa-trash"></i>
                 </button>
                 <i :class="expandedPrepCategories.includes(cat.id) ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'" class="text-beigetone-400 text-xs ml-0.5"></i>
@@ -1033,13 +1033,18 @@
         showPrepCatModal.value = true;
       };
 
+      // 修正：觸發重新賦值，確保深層陣列狀態變更時 Vue 自動重新渲染畫面
       const savePrepCategory = () => {
         if (!prepCatForm.value.title.trim()) return;
+        
         if (editingPrepCatId.value) {
-          const target = prepCategories.value.find(c => c.id === editingPrepCatId.value);
-          if (target) {
-            target.title = prepCatForm.value.title.trim();
-            target.icon = prepCatForm.value.icon;
+          const catIndex = prepCategories.value.findIndex(c => c.id === editingPrepCatId.value);
+          if (catIndex !== -1) {
+            prepCategories.value[catIndex] = {
+              ...prepCategories.value[catIndex],
+              title: prepCatForm.value.title.trim(),
+              icon: prepCatForm.value.icon
+            };
           }
         } else {
           const newCat = {
@@ -1051,6 +1056,8 @@
           prepCategories.value.push(newCat);
           expandedPrepCategories.value.push(newCat.id);
         }
+        // 強制重構陣列參考
+        prepCategories.value = [...prepCategories.value];
         showPrepCatModal.value = false;
       };
 
@@ -1166,17 +1173,19 @@
       };
 
       const getCompletedPrepCount = (cat) => {
-        return cat.items.filter(i => i.completed).length;
+        return cat.items ? cat.items.filter(i => i.completed).length : 0;
       };
 
       const openAddPrepItemModal = (cat) => {
         const name = prompt(`在「${cat.title}」新增項目名稱：`);
         if (name && name.trim()) {
+          if (!cat.items) cat.items = [];
           cat.items.push({
             id: Date.now().toString(),
             name: name.trim(),
             completed: false
           });
+          prepCategories.value = [...prepCategories.value];
         }
       };
 
@@ -1189,8 +1198,9 @@
       const deletePrepItem = (catId, itemId, itemName) => {
         if (confirm(`確定要刪除項目「${itemName || '此項目'}」嗎？`)) {
           const cat = prepCategories.value.find(c => c.id === catId);
-          if (cat) {
+          if (cat && cat.items) {
             cat.items = cat.items.filter(i => i.id !== itemId);
+            prepCategories.value = [...prepCategories.value];
           }
         }
       };
@@ -1251,7 +1261,9 @@
           const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
           const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
           const wk = weekdays[dateObj.getDay()];
-          days.value[selectedDayIndex.value].dateDisplay = `${m}/${d} (${wk})`;
+          if (days.value[selectedDayIndex.value]) {
+            days.value[selectedDayIndex.value].dateDisplay = `${m}/${d} (${wk})`;
+          }
         }
         showDateModal.value = false;
       };
@@ -1311,6 +1323,7 @@
           } else {
             scheduleData.value[selectedDayIndex.value].push({ ...formData.value, id: Date.now().toString() });
           }
+          scheduleData.value = { ...scheduleData.value };
         } else if (currentTab.value === 'drive') {
           if (isEditing.value) {
             const idx = driveList.value.findIndex(i => i.id === formData.value.id);
@@ -1318,6 +1331,7 @@
           } else {
             driveList.value.push({ ...formData.value, id: Date.now().toString() });
           }
+          driveList.value = [...driveList.value];
         } else if (currentTab.value === 'shopping') {
           if (isEditing.value) {
             const idx = shoppingList.value.findIndex(i => i.id === formData.value.id);
@@ -1325,6 +1339,7 @@
           } else {
             shoppingList.value.push({ ...formData.value, id: Date.now().toString() });
           }
+          shoppingList.value = [...shoppingList.value];
         } else if (currentTab.value === 'expense') {
           if (isEditing.value) {
             const idx = expenses.value.findIndex(i => i.id === formData.value.id);
@@ -1332,6 +1347,7 @@
           } else {
             expenses.value.push({ ...formData.value, id: Date.now().toString(), date: new Date().toISOString().split('T')[0] });
           }
+          expenses.value = [...expenses.value];
         }
         showModal.value = false;
       };
