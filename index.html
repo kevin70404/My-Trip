@@ -140,83 +140,86 @@
           </div>
         </div>
 
-        <!-- 視覺化時間軸主體 (加寬左邊距以利顯示時間標籤) -->
-        <div class="relative border-l-2 border-beigetone-300 ml-12 pl-6 space-y-6 my-2">
+        <!-- 視覺化時間軸主體 (時間軸左移並使左右兩側間距一致，圖卡顯示於時間框下方) -->
+        <div class="relative border-l-2 border-beigetone-300 ml-2 pl-0 space-y-6 my-2">
           
-          <div v-if="currentDaySchedule.length === 0" class="text-center py-8 text-xs text-beigetone-400">
+          <div v-if="currentDaySchedule.length === 0" class="text-center py-8 text-xs text-beigetone-400 pl-4">
             尚無行程，點選右下角「+」開始新增吧！
           </div>
 
-          <div v-for="(item, idx) in currentDaySchedule" :key="item.id" class="relative group">
+          <div v-for="(item, idx) in currentDaySchedule" :key="item.id" class="relative group pl-5 flex flex-col items-start">
             
-            <!-- 時間軸節點：顯示使用者設定的時間 -->
-            <div class="absolute -left-[54px] top-1 min-w-[56px] px-1.5 py-0.5 rounded-full bg-accent-sage text-white text-[11px] font-bold font-mono text-center shadow border-2 border-beigetone-50 flex items-center justify-center">
+            <!-- 時間軸節點：位於時間軸線上 -->
+            <div class="absolute -left-[11px] top-0 min-w-[50px] px-2 py-0.5 rounded-full bg-accent-sage text-white text-[11px] font-bold font-mono text-center shadow border-2 border-beigetone-50 flex items-center justify-center z-10">
               {{ item.time || '--:--' }}
             </div>
 
-            <!-- 航班卡片 -->
-            <div v-if="item.category === '航班'" class="bg-gradient-to-br from-beigetone-800 to-beigetone-900 text-white p-4 rounded-2xl shadow-md relative">
-              <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-[11px] bg-accent-terracotta text-white px-2 py-0.5 rounded-md font-medium">航班資訊</span>
+            <!-- 右側資訊圖卡：位於時間框下方，並與容器左右等寬 -->
+            <div class="w-full mt-7">
+              <!-- 航班卡片 (改為淺咖啡色底，高清晰對比) -->
+              <div v-if="item.category === '航班'" class="bg-[#EFE6DC] border border-[#DED5C1] text-beigetone-900 p-4 rounded-2xl shadow-sm relative">
+                <div class="flex justify-between items-center mb-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[11px] bg-accent-sage text-white px-2 py-0.5 rounded-md font-bold">航班資訊</span>
+                  </div>
+                  <button @click="openEditModal(item)" class="text-beigetone-400 hover:text-beigetone-900 p-1">
+                    <i class="fa-solid fa-pen-to-square text-sm"></i>
+                  </button>
                 </div>
-                <button @click="openEditModal(item)" class="text-white/70 hover:text-white p-1">
-                  <i class="fa-solid fa-pen-to-square text-sm"></i>
-                </button>
+
+                <div class="flex justify-between items-center my-2 text-center">
+                  <div class="w-1/3">
+                    <div class="text-lg font-bold font-maru tracking-wide text-beigetone-900">
+                      {{ item.depAirport || 'TPE' }}
+                      <span v-if="item.depCn" class="text-[10px] font-normal text-beigetone-800 block">{{ item.depCn }}</span>
+                    </div>
+                    <div class="text-xs font-bold text-accent-terracotta mt-0.5">{{ item.depTime || '08:15' }}</div>
+                  </div>
+
+                  <div class="w-1/3 flex flex-col items-center justify-center">
+                    <span class="text-[10px] font-extrabold text-beigetone-800 tracking-wider bg-beigetone-200/70 px-2 py-0.5 rounded-full mb-1">
+                      {{ item.flightNo || 'JX800' }}
+                    </span>
+                    <i class="fa-solid fa-plane text-beigetone-800 text-base my-0.5"></i>
+                  </div>
+
+                  <div class="w-1/3">
+                    <div class="text-lg font-bold font-maru tracking-wide text-beigetone-900">
+                      {{ item.arrAirport || 'NRT' }}
+                      <span v-if="item.arrCn" class="text-[10px] font-normal text-beigetone-800 block">{{ item.arrCn }}</span>
+                    </div>
+                    <div class="text-xs font-bold text-accent-terracotta mt-0.5">{{ item.arrTime || '12:30' }}</div>
+                  </div>
+                </div>
               </div>
 
-              <div class="flex justify-between items-center my-2 text-center">
-                <div class="w-1/3">
-                  <div class="text-lg font-bold font-maru tracking-wide">
-                    {{ item.depAirport || 'TPE' }}
-                    <span v-if="item.depCn" class="text-[10px] font-normal text-beigetone-200 block">{{ item.depCn }}</span>
+              <!-- 一般行程卡片 -->
+              <div v-else class="bg-white rounded-2xl p-4 shadow-sm border border-beigetone-200/80 relative">
+                <div class="flex justify-between items-center mb-1.5">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[11px] bg-beigetone-100 text-beigetone-800 px-2 py-0.5 rounded-md font-medium">{{ item.category }}</span>
                   </div>
-                  <div class="text-xs font-bold text-accent-sand mt-0.5">{{ item.depTime || '08:15' }}</div>
+                  
+                  <button @click="openMap(item.mapUrl, item.name)" class="text-xs bg-beigetone-100 hover:bg-beigetone-200 text-beigetone-800 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 transition">
+                    <i class="fa-solid fa-compass text-accent-terracotta"></i> 導航
+                  </button>
                 </div>
 
-                <div class="w-1/3 flex flex-col items-center justify-center">
-                  <span class="text-[10px] font-extrabold text-white tracking-wider bg-white/10 px-2 py-0.5 rounded-full mb-1">
-                    {{ item.flightNo || 'JX800' }}
-                  </span>
-                  <i class="fa-solid fa-plane text-accent-sand text-base my-0.5"></i>
-                </div>
-
-                <div class="w-1/3">
-                  <div class="text-lg font-bold font-maru tracking-wide">
-                    {{ item.arrAirport || 'NRT' }}
-                    <span v-if="item.arrCn" class="text-[10px] font-normal text-beigetone-200 block">{{ item.arrCn }}</span>
-                  </div>
-                  <div class="text-xs font-bold text-accent-sand mt-0.5">{{ item.arrTime || '12:30' }}</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- 一般行程卡片 -->
-            <div v-else class="bg-white rounded-2xl p-4 shadow-sm border border-beigetone-200/80 relative">
-              <div class="flex justify-between items-center mb-1.5">
-                <div class="flex items-center gap-2">
-                  <span class="text-[11px] bg-beigetone-100 text-beigetone-800 px-2 py-0.5 rounded-md font-medium">{{ item.category }}</span>
-                </div>
+                <h4 class="font-bold text-beigetone-900 text-base mb-1.5 break-words">{{ item.name }}</h4>
                 
-                <button @click="openMap(item.mapUrl, item.name)" class="text-xs bg-beigetone-100 hover:bg-beigetone-200 text-beigetone-800 px-2.5 py-1 rounded-full font-medium flex items-center gap-1 transition">
-                  <i class="fa-solid fa-compass text-accent-terracotta"></i> 導航
+                <div class="text-xs text-beigetone-800 space-y-1 mb-1">
+                  <div v-if="item.ticket" class="flex items-center gap-1.5">
+                    <i class="fa-solid fa-ticket text-beigetone-400"></i> {{ item.ticket }}
+                  </div>
+                  <div v-if="item.note" class="text-beigetone-400 mt-1 pl-2.5 border-l-2 border-beigetone-200 italic break-words">
+                    {{ item.note }}
+                  </div>
+                </div>
+
+                <button @click="openEditModal(item)" class="absolute bottom-3 right-3 text-beigetone-300 hover:text-beigetone-800 p-1">
+                  <i class="fa-solid fa-pen-to-square"></i>
                 </button>
               </div>
-
-              <h4 class="font-bold text-beigetone-900 text-base mb-1.5 break-words">{{ item.name }}</h4>
-              
-              <div class="text-xs text-beigetone-800 space-y-1 mb-1">
-                <div v-if="item.ticket" class="flex items-center gap-1.5">
-                  <i class="fa-solid fa-ticket text-beigetone-400"></i> {{ item.ticket }}
-                </div>
-                <div v-if="item.note" class="text-beigetone-400 mt-1 pl-2.5 border-l-2 border-beigetone-200 italic break-words">
-                  {{ item.note }}
-                </div>
-              </div>
-
-              <button @click="openEditModal(item)" class="absolute bottom-3 right-3 text-beigetone-300 hover:text-beigetone-800 p-1">
-                <i class="fa-solid fa-pen-to-square"></i>
-              </button>
             </div>
 
           </div>
