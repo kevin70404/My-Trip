@@ -252,21 +252,23 @@
         <div class="space-y-3">
           <div v-for="(cat, index) in prepCategories" :key="cat.id"
                :data-index="index"
-               draggable="true"
-               @dragstart="onDragStart(index)"
-               @dragover.prevent
-               @drop="onDrop(index)"
                :class="{ 'dragging': draggedIndex === index }"
-               class="prep-card bg-white rounded-2xl border border-beigetone-200 shadow-sm overflow-hidden transition-all duration-200 touch-none-select">
+               class="prep-card bg-white rounded-2xl border border-beigetone-200 shadow-sm overflow-hidden transition-all duration-200">
             
             <!-- 類別圖卡 header -->
             <div @click="togglePrepCategory(cat.id)" class="p-4 bg-beigetone-50 flex items-center justify-between cursor-pointer hover:bg-beigetone-100/60 transition">
               <div class="flex items-center gap-2.5">
-                <i class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing mr-1 p-2 touch-none" 
-                   @click.stop 
+                <!-- 拖拉握把：限定只有這裡能觸發拖拽 -->
+                <i class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing mr-1 p-2 touch-none touch-none-select" 
+                   draggable="true"
+                   @dragstart="onDragStart(index, $event)"
+                   @dragover.prevent="onDragOver(index, $event)"
+                   @drop="onDrop(index, $event)"
+                   @dragend="onDragEnd"
                    @touchstart="onTouchStart(index, $event)"
                    @touchmove="onTouchMove($event)"
                    @touchend="onTouchEnd"
+                   @click.stop
                    title="按住拖拉排序"></i>
                 <i :class="cat.icon || 'fa-solid fa-suitcase'" class="text-accent-terracotta text-base"></i>
                 <span class="font-bold text-sm text-beigetone-900">{{ cat.title }}</span>
@@ -937,14 +939,27 @@
 
       // 桌面端 Drag&Drop
       const draggedIndex = ref(null);
-      const onDragStart = (index) => {
+      
+      const onDragStart = (index, e) => {
         draggedIndex.value = index;
+        if (e.dataTransfer) {
+          e.dataTransfer.effectAllowed = 'move';
+        }
       };
-      const onDrop = (targetIndex) => {
+
+      const onDragOver = (targetIndex, e) => {
         if (draggedIndex.value !== null && draggedIndex.value !== targetIndex) {
           const item = prepCategories.value.splice(draggedIndex.value, 1)[0];
           prepCategories.value.splice(targetIndex, 0, item);
+          draggedIndex.value = targetIndex;
         }
+      };
+
+      const onDrop = (targetIndex, e) => {
+        draggedIndex.value = null;
+      };
+
+      const onDragEnd = () => {
         draggedIndex.value = null;
       };
 
@@ -964,7 +979,6 @@
         if (touchStartIndex.value === null) return;
         
         const currentY = e.touches[0].clientY;
-        // 加入距離門檻 (至少要移動超過 25px 才做交換計算)，減緩靈敏度
         if (Math.abs(currentY - lastSwappedY) < 25) return;
 
         const touch = e.touches[0];
@@ -1342,7 +1356,7 @@
         scheduleData, currentDaySchedule, driveList, shoppingList, expenses, totalExpense, japanesePhrases,
         prepCategories, expandedPrepCategories, togglePrepCategory, getCompletedPrepCount, deletePrepCategory, deletePrepItem,
         prepIcons, showPrepCatModal, editingPrepCatId, prepCatForm, openPrepCategoryModal, savePrepCategory, openAddPrepItemModal,
-        draggedIndex, onDragStart, onDrop, onTouchStart, onTouchMove, onTouchEnd,
+        draggedIndex, onDragStart, onDragOver, onDrop, onDragEnd, onTouchStart, onTouchMove, onTouchEnd,
         selectedJpCategory, showModal, showDateModal, dateInputVal, isEditing, formData, previewImageSrc, largeJapaneseItem, uploadBanner, handleImageUpload,
         openMap, callPhone, previewImg, showLargeJapanese, speakJapanese, selectAddType, openAddModal, openEditModal, saveData, confirmDelete,
         addNewDay, openDateModal, saveDayDate, deleteCurrentDay
