@@ -234,18 +234,13 @@
 
       <!-- 2. 行前準備 Tab -->
       <div v-if="currentTab === 'preparation'" class="space-y-4">
-        <div class="bg-beigetone-800 text-white rounded-2xl p-4 shadow-sm flex items-center justify-between">
-          <div>
-            <h3 class="font-bold text-base">行李與行前準備</h3>
-            <p class="text-xs text-beigetone-300 mt-0.5">可按住握把圖示拖拉調整順序，點擊可展開項目</p>
-          </div>
-          <button @click="openPrepCategoryModal()" class="bg-white text-beigetone-800 px-3 py-1.5 rounded-xl text-xs font-bold hover:bg-beigetone-100 transition">
-            <i class="fa-solid fa-plus mr-1"></i>新增類別
-          </button>
+        <div class="bg-beigetone-800 text-white rounded-2xl p-4 shadow-sm">
+          <h3 class="font-bold text-base">行李與行前準備</h3>
+          <p class="text-xs text-beigetone-300 mt-0.5">可按住握把圖示拖拉調整順序，點擊可展開項目</p>
         </div>
 
         <div v-if="prepCategories.length === 0" class="text-center py-12 text-xs text-beigetone-400">
-          目前還沒有行前準備項目，點選右上角「新增類別」開始規劃吧！
+          目前還沒有行前準備項目，點選右下角「+」開始新增類別吧！
         </div>
 
         <!-- 可拖拉圖卡區域 -->
@@ -256,10 +251,10 @@
                class="prep-card bg-white rounded-2xl border border-beigetone-200 shadow-sm overflow-hidden transition-all duration-200">
             
             <!-- 類別圖卡 header -->
-            <div @click="togglePrepCategory(cat.id)" class="p-4 bg-beigetone-50 flex items-center justify-between cursor-pointer hover:bg-beigetone-100/60 transition">
-              <div class="flex items-center gap-2.5">
+            <div @click="togglePrepCategory(cat.id)" class="p-4 bg-beigetone-50 flex items-center justify-between cursor-pointer hover:bg-beigetone-100/60 transition gap-2">
+              <div class="flex items-center gap-2 min-w-0 flex-1">
                 <!-- 拖拉握把：限定只有這裡能觸發拖拽 -->
-                <i class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing mr-1 p-2 touch-none touch-none-select" 
+                <i class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing p-1.5 touch-none touch-none-select flex-shrink-0" 
                    draggable="true"
                    @dragstart="onDragStart(index, $event)"
                    @dragover.prevent="onDragOver(index, $event)"
@@ -270,28 +265,28 @@
                    @touchend="onTouchEnd"
                    @click.stop
                    title="按住拖拉排序"></i>
-                <i :class="cat.icon || 'fa-solid fa-suitcase'" class="text-accent-terracotta text-base"></i>
-                <span class="font-bold text-sm text-beigetone-900">{{ cat.title }}</span>
-                <span class="text-xs text-beigetone-400">({{ getCompletedPrepCount(cat) }}/{{ cat.items.length }})</span>
+                <i :class="cat.icon || 'fa-solid fa-suitcase'" class="text-accent-terracotta text-base flex-shrink-0"></i>
+                <span class="font-bold text-sm text-beigetone-900 truncate">{{ cat.title }}</span>
+                <span class="text-xs text-beigetone-400 flex-shrink-0">({{ getCompletedPrepCount(cat) }}/{{ cat.items.length }})</span>
               </div>
-              <div class="flex items-center gap-1.5">
+              <div class="flex items-center gap-1.5 flex-shrink-0">
                 <button @click.stop="openPrepCategoryModal(cat)" class="text-beigetone-400 hover:text-beigetone-800 p-1 text-xs" title="編輯類別">
                   <i class="fa-solid fa-pen"></i>
                 </button>
-                <button @click.stop="openAddPrepItemModal(cat)" class="text-xs bg-beigetone-200/80 text-beigetone-800 px-2.5 py-1 rounded-lg font-medium hover:bg-beigetone-300 transition">
+                <button @click.stop="openAddPrepItemModal(cat)" class="text-xs bg-beigetone-200/80 text-beigetone-800 px-2.5 py-1 rounded-lg font-medium hover:bg-beigetone-300 transition whitespace-nowrap">
                   + 項目
                 </button>
                 <button @click.stop="deletePrepCategory(cat.id)" class="text-beigetone-300 hover:text-red-500 p-1 text-xs" title="刪除類別">
                   <i class="fa-solid fa-trash"></i>
                 </button>
-                <i :class="expandedPrepCategories.includes(cat.id) ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'" class="text-beigetone-400 text-xs ml-1"></i>
+                <i :class="expandedPrepCategories.includes(cat.id) ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'" class="text-beigetone-400 text-xs ml-0.5"></i>
               </div>
             </div>
 
             <!-- 可隱藏式清單列表 -->
             <div v-if="expandedPrepCategories.includes(cat.id)" class="p-4 border-t border-beigetone-100 space-y-2.5">
               <div v-if="cat.items.length === 0" class="text-xs text-beigetone-400 text-center py-2">
-                此類別暫無項目，點擊右上角新增。
+                此類別暫無項目，點擊右上角「+ 項目」新增。
               </div>
 
               <div v-for="item in cat.items" :key="item.id" class="flex items-center justify-between group">
@@ -640,7 +635,13 @@
       </button>
     </div>
 
-    <div v-else-if="currentTab !== 'preparation'" class="fixed bottom-6 right-6 z-40">
+    <div v-else-if="currentTab === 'preparation'" class="fixed bottom-6 right-6 z-40">
+      <button @click="openPrepCategoryModal()" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+    </div>
+
+    <div v-else class="fixed bottom-6 right-6 z-40">
       <button @click="openAddModal()" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
         <i class="fa-solid fa-plus"></i>
       </button>
