@@ -5,7 +5,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
   <meta name="googlebot" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>日系極簡多功能行程表 (Firebase 多人即時同步版)</title>
+  <title>日系極簡多功能行程表 (主機/訪客模式)</title>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -15,30 +15,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
-
-  <!-- Firebase SDKs (已更新改用 signInWithPopup) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-    // 已替換為您的 Firebase 專案設定
-    const firebaseConfig = {
-      apiKey: "AIzaSyDh95N7ieaiyRkPJBn-MQynqdGQ-Wh-sTE",
-      authDomain: "web-app-ecf51.firebaseapp.com",
-      projectId: "web-app-ecf51",
-      storageBucket: "web-app-ecf51.firebasestorage.app",
-      messagingSenderId: "781452045981",
-      appId: "1:781452045981:web:729475b71d44ac6a59ee74",
-      measurementId: "G-7YWLFG6TME"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    window.firebaseApp = { auth, db, GoogleAuthProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, signOut, doc, setDoc, getDoc, onSnapshot };
-  </script>
 
   <script>
     tailwind.config = {
@@ -102,59 +78,59 @@
 
 <div id="app">
 
-  <!-- ================= 0. Firebase 登入與雲端狀態列 ================= -->
-  <div v-if="isAuthenticated" class="bg-white/80 backdrop-blur border-b border-beigetone-200 px-4 py-2 flex items-center justify-between text-xs text-beigetone-800 z-50 sticky top-0">
-    <div class="flex items-center gap-2 truncate">
-      <i class="fa-solid fa-users text-accent-terracotta"></i>
-      <span class="truncate">多人即時同步中 ({{ userEmail || '匿名登入' }})</span>
-      <span v-if="isSaving" class="text-[10px] bg-beigetone-200 px-1.5 py-0.5 rounded animate-pulse">同步中...</span>
-      <span v-else class="text-[10px] text-emerald-600 font-bold">已同步</span>
-    </div>
-    <button @click="logoutFirebase" class="text-beigetone-400 hover:text-beigetone-800 underline text-[11px] flex-shrink-0">
-      登出
-    </button>
-  </div>
-
-  <!-- ================= 1. 密碼驗證解鎖與 Firebase 登入畫面 ================= -->
+  <!-- ================= 1. 身分驗證與解鎖畫面 ================= -->
   <div v-if="!isAuthenticated" class="fixed inset-0 bg-beigetone-100 z-50 flex flex-col items-center justify-center p-6 text-center">
     <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm border border-beigetone-200 space-y-4">
-      <div class="w-16 h-16 bg-beigetone-200 text-beigetone-800 rounded-full flex items-center justify-center text-2xl mx-auto mb-2">
+      <div class="w-16 h-16 bg-beigetone-200 text-beigetone-800 rounded-full flex items-center justify-center text-2xl mx-auto">
         <i class="fa-solid fa-lock"></i>
       </div>
-      <h2 class="text-xl font-bold text-beigetone-900 mb-1">私人行程解鎖</h2>
-      <p class="text-xs text-beigetone-400 mb-4">此行程網頁受密碼保護，請輸入通行密碼並選擇雲端登入</p>
+      <div>
+        <h2 class="text-xl font-bold text-beigetone-900 mb-1">行程系統登入</h2>
+        <p class="text-xs text-beigetone-400">請選擇您的身分進入檢視或管理行程</p>
+      </div>
       
-      <form @submit.prevent="checkPassword" class="space-y-3">
-        <input type="password" inputmode="numeric" v-model="passwordInput" placeholder="請輸入通行密碼 (0214)" 
-               class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-4 py-3 text-center text-lg tracking-widest font-bold focus:outline-none focus:border-beigetone-800">
+      <!-- 主機登入表單 -->
+      <form @submit.prevent="checkHostPassword" class="space-y-3 pt-2">
+        <input type="password" inputmode="numeric" v-model="passwordInput" placeholder="請輸入主機編輯密碼" 
+               class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-4 py-3 text-center text-sm tracking-widest font-bold focus:outline-none focus:border-beigetone-800">
         
-        <button type="submit" class="w-full bg-beigetone-800 text-white font-bold py-3 rounded-2xl shadow-md hover:bg-beigetone-900 transition active:scale-95">
-          驗證密碼進入
+        <button type="submit" class="w-full bg-beigetone-800 text-white font-bold py-3 rounded-2xl shadow-md hover:bg-beigetone-900 transition active:scale-95 text-sm">
+          <i class="fa-solid fa-pen-to-square mr-1.5"></i> 以主機（編輯者）身分進入
         </button>
       </form>
 
-      <div v-if="passwordError" class="text-xs text-red-500 font-medium mt-2">
+      <div v-if="passwordError" class="text-xs text-red-500 font-medium">
         <i class="fa-solid fa-circle-exclamation mr-1"></i> 密碼錯誤，請重新輸入
       </div>
 
-      <div class="pt-4 border-t border-beigetone-100 space-y-2">
-        <p class="text-[11px] text-beigetone-400">雲端同步身分登入：</p>
-        <button @click="loginWithGoogle" class="w-full bg-white border border-beigetone-300 text-beigetone-900 font-bold py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-beigetone-50 transition shadow-sm">
-          <i class="fa-brands fa-google text-red-500"></i> 使用 Google 帳號同步
-        </button>
-        <button @click="loginAnonymouslyUser" class="w-full bg-beigetone-100 text-beigetone-800 font-bold py-2 rounded-2xl text-xs hover:bg-beigetone-200 transition">
-          略過/匿名快速進入
-        </button>
+      <div class="relative flex py-2 items-center">
+        <div class="flex-grow border-t border-beigetone-200"></div>
+        <span class="flex-shrink mx-4 text-xs text-beigetone-400">或</span>
+        <div class="flex-grow border-t border-beigetone-200"></div>
       </div>
+
+      <!-- 訪客登入按鈕 -->
+      <button @click="enterAsVisitor" class="w-full bg-beigetone-100 hover:bg-beigetone-200 text-beigetone-800 font-bold py-3 rounded-2xl transition active:scale-95 text-sm flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-eye"></i> 以訪客（唯讀觀看者）身分進入
+      </button>
     </div>
   </div>
 
+  <!-- ================= 身份提示橫幅 (固定頂部) ================= -->
+  <div v-if="isAuthenticated" class="bg-beigetone-900 text-white px-4 py-1.5 text-[11px] flex justify-between items-center z-50 sticky top-0 shadow-sm">
+    <div class="flex items-center gap-1.5">
+      <span class="w-2 h-2 rounded-full" :class="isHost ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'"></span>
+      <span>目前身分：<strong class="font-bold">{{ isHost ? '主機 (編輯者模式)' : '訪客 (唯讀觀看模式)' }}</strong></span>
+    </div>
+    <button @click="logout" class="underline text-beigetone-300 hover:text-white transition">切換身分</button>
+  </div>
+
   <!-- ================= 2. 行程專案選擇大廳 ================= -->
-  <template v-else-if="!currentProjectId">
+  <template v-if="isAuthenticated && !currentProjectId">
     <div class="p-6 space-y-6">
       <div class="bg-white p-5 rounded-3xl shadow-sm border border-beigetone-200">
         <h1 class="text-lg font-bold text-beigetone-900">我的旅程專案</h1>
-        <p class="text-xs text-beigetone-400 mt-0.5">選擇一個專案進入即時協作，或建立新旅程</p>
+        <p class="text-xs text-beigetone-400 mt-0.5">{{ isHost ? '選擇一個專案進入編輯，或建立新旅程' : '選擇一個專案以檢視詳細行程內容' }}</p>
       </div>
 
       <!-- 進行中 / 即將到來專案列表 -->
@@ -171,10 +147,10 @@
           <div class="flex-1 min-w-0 pr-12">
             <h3 class="font-bold text-base text-beigetone-900 truncate group-hover:text-beigetone-800 transition">{{ proj.title }}</h3>
             <p class="text-xs text-accent-terracotta font-medium mt-0.5">{{ proj.dateRange || '未設定日期' }}</p>
-            <p class="text-[11px] text-beigetone-400 mt-1 truncate">{{ proj.description || '點擊進入詳細行程管理' }}</p>
+            <p class="text-[11px] text-beigetone-400 mt-1 truncate">{{ proj.description || '點擊進入詳細行程' }}</p>
           </div>
 
-          <div class="absolute top-3 right-3 flex items-center gap-1">
+          <div v-if="isHost" class="absolute top-3 right-3 flex items-center gap-1">
             <button @click.stop="openEditProjectModal(proj)" class="text-beigetone-300 hover:text-beigetone-800 p-2 text-xs transition" title="編輯專案設定">
               <i class="fa-solid fa-pen"></i>
             </button>
@@ -206,10 +182,10 @@
               <h3 class="font-bold text-base text-beigetone-900 truncate">{{ proj.title }}</h3>
             </div>
             <p class="text-xs text-beigetone-400 font-medium mt-0.5">{{ proj.dateRange || '未設定日期' }}</p>
-            <p class="text-[11px] text-beigetone-400 mt-1 truncate">{{ proj.description || '點擊檢視歷史行程與回憶' }}</p>
+            <p class="text-[11px] text-beigetone-400 mt-1 truncate">{{ proj.description || '點擊檢視歷史行程' }}</p>
           </div>
 
-          <div class="absolute top-3 right-3 flex items-center gap-1">
+          <div v-if="isHost" class="absolute top-3 right-3 flex items-center gap-1">
             <button @click.stop="openEditProjectModal(proj)" class="text-beigetone-300 hover:text-beigetone-800 p-2 text-xs transition" title="編輯專案設定">
               <i class="fa-solid fa-pen"></i>
             </button>
@@ -221,15 +197,15 @@
       </div>
     </div>
 
-    <!-- 右下角浮動新增專案按鈕 (+) -->
-    <div class="fixed bottom-6 right-6 z-40">
+    <!-- 右下角浮動新增專案按鈕 (+) - 僅主機能見 -->
+    <div v-if="isHost" class="fixed bottom-6 right-6 z-40">
       <button @click="openNewProjectModal" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition hover:bg-beigetone-900" title="新增專案">
         <i class="fa-solid fa-plus"></i>
       </button>
     </div>
 
     <!-- 新增/編輯專案彈窗 -->
-    <div v-if="showProjectModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div v-if="showProjectModal && isHost" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-sm rounded-[28px] p-6 space-y-4 shadow-2xl">
         <div class="flex justify-between items-center">
           <h3 class="font-bold text-lg text-beigetone-900">{{ isEditingProject ? '編輯行程專案' : '建立新行程專案' }}</h3>
@@ -242,7 +218,7 @@
             <input v-model="newProjectForm.title" placeholder="例如：2026 東京賞楓五日遊" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-beigetone-800">
           </div>
           <div>
-            <label class="text-xs font-bold text-beigetone-800 block mb-1">日期區間備註 (用於自動排序)</label>
+            <label class="text-xs font-bold text-beigetone-800 block mb-1">日期區間備註</label>
             <input v-model="newProjectForm.dateRange" placeholder="例如：2026/09/06 - 2026/09/10" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-beigetone-800">
           </div>
           <div>
@@ -260,12 +236,13 @@
   </template>
 
   <!-- ================= 3. 主 Web App 畫面 (選定特定專案後) ================= -->
-  <template v-else>
+  <template v-else-if="isAuthenticated && currentProjectId">
     <!-- 頁首 Banner -->
     <div class="relative w-full h-[220px] bg-beigetone-300 overflow-hidden">
       <img :src="bannerUrl" class="w-full h-full object-cover object-center" alt="旅遊 Banner">
       
-      <label class="absolute top-4 left-4 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full text-xs text-beigetone-800 shadow cursor-pointer hover:bg-white transition">
+      <!-- 更換封面 (僅主機) -->
+      <label v-if="isHost" class="absolute top-4 left-4 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full text-xs text-beigetone-800 shadow cursor-pointer hover:bg-white transition">
         <i class="fa-solid fa-camera mr-1"></i> 更換封面
         <input type="file" @change="uploadBanner" class="hidden" accept="image/*">
       </label>
@@ -287,7 +264,8 @@
             </span>
           </button>
           
-          <button @click="addNewDay" class="flex-shrink-0 w-12 h-14 bg-white text-beigetone-800 border border-dashed border-beigetone-400 rounded-2xl flex items-center justify-center hover:bg-beigetone-100 transition">
+          <!-- 新增天數 (僅主機) -->
+          <button v-if="isHost" @click="addNewDay" class="flex-shrink-0 w-12 h-14 bg-white text-beigetone-800 border border-dashed border-beigetone-400 rounded-2xl flex items-center justify-center hover:bg-beigetone-100 transition">
             <i class="fa-solid fa-plus text-lg"></i>
           </button>
         </div>
@@ -297,7 +275,8 @@
             <i class="fa-solid fa-calendar-day mr-1.5 text-accent-terracotta"></i>Day {{ selectedDayIndex + 1 }} - {{ days[selectedDayIndex]?.dateDisplay }}
           </span>
           
-          <div class="flex items-center gap-1.5">
+          <!-- 日期修改/刪除 (僅主機) -->
+          <div v-if="isHost" class="flex items-center gap-1.5">
             <button @click="openDateModal" class="text-xs px-2.5 py-1 bg-beigetone-100 text-beigetone-800 rounded-full font-medium hover:bg-beigetone-200 transition">
               <i class="fa-solid fa-pen mr-1"></i>修改日期
             </button>
@@ -310,7 +289,7 @@
         <div class="relative border-l-2 border-beigetone-300 ml-2 pl-0 space-y-6 my-2">
           
           <div v-if="currentDaySchedule.length === 0" class="text-center py-8 text-xs text-beigetone-400 pl-4">
-            尚無行程，點選右下角「+」開始新增吧！
+            尚無行程，{{ isHost ? '點選右下角「+」開始新增吧！' : '目前主機尚未新增行程內容。' }}
           </div>
 
           <div v-for="(item, idx) in currentDaySchedule" :key="item.id" class="relative group pl-5 flex flex-col items-start">
@@ -325,7 +304,7 @@
                   <div class="flex items-center gap-2">
                     <span class="text-[11px] bg-accent-terracotta text-white px-2 py-0.5 rounded-md font-bold">航班資訊</span>
                   </div>
-                  <button @click="openEditModal(item)" class="text-beigetone-400 hover:text-beigetone-900 p-1">
+                  <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-400 hover:text-beigetone-900 p-1">
                     <i class="fa-solid fa-pen-to-square text-sm"></i>
                   </button>
                 </div>
@@ -378,7 +357,7 @@
                   </div>
                 </div>
 
-                <button @click="openEditModal(item)" class="absolute bottom-3 right-3 text-beigetone-300 hover:text-beigetone-800 p-1">
+                <button v-if="isHost" @click="openEditModal(item)" class="absolute bottom-3 right-3 text-beigetone-300 hover:text-beigetone-800 p-1">
                   <i class="fa-solid fa-pen-to-square"></i>
                 </button>
               </div>
@@ -392,11 +371,11 @@
       <div v-if="currentTab === 'preparation'" class="space-y-4">
         <div class="bg-beigetone-800 text-white rounded-2xl p-4 shadow-sm">
           <h3 class="font-bold text-base">行李與行前準備</h3>
-          <p class="text-xs text-beigetone-300 mt-0.5">可按住握把圖示拖拉調整順序，點擊可展開項目</p>
+          <p class="text-xs text-beigetone-300 mt-0.5">{{ isHost ? '可按住握把圖示拖拉調整順序' : '檢視行前準備與行李清單' }}</p>
         </div>
 
         <div v-if="prepCategories.length === 0" class="text-center py-12 text-xs text-beigetone-400">
-          目前還沒有行前準備項目，點選右下角「+」開始新增類別吧！
+          目前還沒有行前準備項目。
         </div>
 
         <div class="space-y-3">
@@ -407,7 +386,7 @@
             
             <div @click="togglePrepCategory(cat.id)" class="p-4 bg-beigetone-50 flex items-center justify-between cursor-pointer hover:bg-beigetone-100/60 transition gap-2">
               <div class="flex items-center gap-2 min-w-0 flex-1">
-                <i class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing p-1.5 touch-none touch-none-select flex-shrink-0" 
+                <i v-if="isHost" class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing p-1.5 touch-none touch-none-select flex-shrink-0" 
                    draggable="true"
                    @dragstart="onDragStart(index, $event)"
                    @dragover.prevent="onDragOver(index, $event)"
@@ -422,33 +401,37 @@
                 <span class="font-bold text-sm text-beigetone-900 truncate">{{ cat.title }}</span>
                 <span class="text-xs text-beigetone-400 flex-shrink-0">({{ getCompletedPrepCount(cat) }}/{{ cat.items.length }})</span>
               </div>
+              
               <div class="flex items-center gap-1.5 flex-shrink-0">
-                <button @click.stop.prevent="openPrepCategoryModal(cat)" class="text-beigetone-400 hover:text-beigetone-800 p-1 text-xs" title="編輯類別">
-                  <i class="fa-solid fa-pen"></i>
-                </button>
-                <button @click.stop.prevent="openAddPrepItemModal(cat)" class="text-xs bg-beigetone-200/80 text-beigetone-800 px-2.5 py-1 rounded-lg font-medium hover:bg-beigetone-300 transition whitespace-nowrap">
-                  + 項目
-                </button>
-                <button @click.stop.prevent="deletePrepCategory(cat.id)" class="text-beigetone-300 hover:text-red-500 p-1 text-xs" title="刪除類別">
-                  <i class="fa-solid fa-trash"></i>
-                </button>
+                <template v-if="isHost">
+                  <button @click.stop.prevent="openPrepCategoryModal(cat)" class="text-beigetone-400 hover:text-beigetone-800 p-1 text-xs" title="編輯類別">
+                    <i class="fa-solid fa-pen"></i>
+                  </button>
+                  <button @click.stop.prevent="openAddPrepItemModal(cat)" class="text-xs bg-beigetone-200/80 text-beigetone-800 px-2.5 py-1 rounded-lg font-medium hover:bg-beigetone-300 transition whitespace-nowrap">
+                    + 項目
+                  </button>
+                  <button @click.stop.prevent="deletePrepCategory(cat.id)" class="text-beigetone-300 hover:text-red-500 p-1 text-xs" title="刪除類別">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </template>
                 <i :class="expandedPrepCategories.includes(cat.id) ? 'fa-solid fa-chevron-up' : 'fa-solid fa-chevron-down'" class="text-beigetone-400 text-xs ml-0.5"></i>
               </div>
             </div>
 
             <div v-if="expandedPrepCategories.includes(cat.id)" class="p-4 border-t border-beigetone-100 space-y-2.5">
               <div v-if="cat.items.length === 0" class="text-xs text-beigetone-400 text-center py-2">
-                此類別暫無項目，點擊右上角「+ 項目」新增。
+                此類別暫無項目。
               </div>
 
               <div v-for="item in cat.items" :key="item.id" class="flex items-center justify-between group">
                 <label class="flex items-center gap-2.5 cursor-pointer flex-1">
-                  <input type="checkbox" v-model="item.completed" class="w-4 h-4 rounded text-beigetone-800 focus:ring-beigetone-800 border-beigetone-300">
+                  <!-- 訪客唯讀狀態下禁用勾選變更 -->
+                  <input type="checkbox" v-model="item.completed" :disabled="!isHost" class="w-4 h-4 rounded text-beigetone-800 focus:ring-beigetone-800 border-beigetone-300 disabled:opacity-50">
                   <span :class="item.completed ? 'line-through text-beigetone-300' : 'text-beigetone-800'" class="text-xs font-medium break-all">
                     {{ item.name }}
                   </span>
                 </label>
-                <button @click="deletePrepItem(cat.id, item.id, item.name)" class="text-beigetone-300 hover:text-red-500 text-xs p-1" title="刪除項目">
+                <button v-if="isHost" @click="deletePrepItem(cat.id, item.id, item.name)" class="text-beigetone-300 hover:text-red-500 text-xs p-1" title="刪除項目">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </div>
@@ -464,7 +447,7 @@
             <i class="fa-solid fa-circle-info text-accent-terracotta text-base mt-0.5"></i>
             <div>
               <span class="font-bold block mb-0.5">旅遊溝通小幫手</span>
-              請點選下方任一情境圖卡，即可查看該分類的豐富實用日語短句，並可點擊發音或全螢幕放大出示。
+              請點選下方任一情境圖卡，即可查看實用日語短句，並可點擊發音或全螢幕放大出示。
             </div>
           </div>
 
@@ -543,7 +526,7 @@
               </div>
             </div>
 
-            <button @click="openEditModal(item)" class="absolute top-2 right-2 bg-black/40 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs backdrop-blur-xs hover:bg-black/60 transition z-10">
+            <button v-if="isHost" @click="openEditModal(item)" class="absolute top-2 right-2 bg-black/40 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs backdrop-blur-xs hover:bg-black/60 transition z-10">
               <i class="fa-solid fa-pen text-[10px]"></i>
             </button>
           </div>
@@ -583,7 +566,7 @@
                 <div class="font-bold text-beigetone-900 font-maru">¥ {{ Number(exp.amount).toLocaleString() }}</div>
                 <div class="text-[10px] text-beigetone-400">{{ exp.date }}</div>
               </div>
-              <button @click="openEditModal(exp)" class="text-beigetone-300 hover:text-beigetone-800 p-1.5">
+              <button v-if="isHost" @click="openEditModal(exp)" class="text-beigetone-300 hover:text-beigetone-800 p-1.5">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
@@ -599,7 +582,7 @@
               <span class="text-xs bg-beigetone-800 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-car-side"></i> 租車預約
               </span>
-              <button @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
+              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
@@ -646,12 +629,12 @@
               <span class="text-xs bg-red-600 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-gas-pump"></i> 加油資訊
               </span>
-              <button @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
+              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
 
-            <h4 class="font-bold text-base text-beigetone-900 mb-1">{{ item.stationName || '還車前指定加油站' }}</h4>
+            <h4 class="font-bold text-base text-beigetone-900 mb-1">{{ item.stationName || '指定加油站' }}</h4>
             
             <div class="text-xs text-beigetone-800 space-y-1.5 mb-3">
               <div v-if="item.gasType" class="flex items-center gap-1.5">
@@ -677,7 +660,7 @@
               <span class="text-xs bg-blue-600 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-square-parking"></i> 停車場備註
               </span>
-              <button @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
+              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
@@ -704,7 +687,7 @@
               <span class="text-xs bg-emerald-700 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-road"></i> 高速公路過路費 / ETC
               </span>
-              <button @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
+              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
@@ -730,7 +713,7 @@
       <div v-if="showNavMenu" @click="showNavMenu = false" class="fixed inset-0 bg-black/20 backdrop-blur-xs z-30"></div>
 
       <div v-if="showNavMenu" class="absolute bottom-16 left-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beigetone-200 min-w-[170px] space-y-1 z-40 transition-all duration-200">
-        <button @click="quitProject" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold text-accent-terracotta hover:bg-beigetone-100 transition border-b border-beigetone-100 mb-1">
+        <button @click="currentProjectId = null; showNavMenu = false" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold text-accent-terracotta hover:bg-beigetone-100 transition border-b border-beigetone-100 mb-1">
           <i class="fa-solid fa-arrow-left-long w-5 text-center"></i>
           <span>切換行程專案</span>
         </button>
@@ -766,45 +749,47 @@
       </button>
     </div>
 
-    <!-- ================= 右下角浮動新增選單 (+) ================= -->
-    <div v-if="currentTab === 'itinerary' || currentTab === 'drive'" class="fixed bottom-6 right-6 z-40">
-      <div v-if="showAddMenu" @click="showAddMenu = false" class="fixed inset-0 bg-black/20 backdrop-blur-xs z-30"></div>
+    <!-- ================= 右下角浮動新增選單 (+) - 僅主機能見 ================= -->
+    <template v-if="isHost">
+      <div v-if="currentTab === 'itinerary' || currentTab === 'drive'" class="fixed bottom-6 right-6 z-40">
+        <div v-if="showAddMenu" @click="showAddMenu = false" class="fixed inset-0 bg-black/20 backdrop-blur-xs z-30"></div>
 
-      <div v-if="showAddMenu" class="absolute bottom-16 right-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beigetone-200 min-w-[150px] space-y-1 z-40 transition-all duration-200">
-        <template v-if="currentTab === 'itinerary'">
-          <button v-for="cat in ['景點', '美食', '購物', '住宿', '航班', '其他']" :key="cat" @click="selectAddType(cat)" class="w-full px-3.5 py-2 rounded-xl flex items-center justify-between text-xs font-bold text-beigetone-800 hover:bg-beigetone-100 transition">
-            <span>{{ cat }}</span>
-            <i class="fa-solid fa-angle-right text-beigetone-400"></i>
-          </button>
-        </template>
+        <div v-if="showAddMenu" class="absolute bottom-16 right-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beigetone-200 min-w-[150px] space-y-1 z-40 transition-all duration-200">
+          <template v-if="currentTab === 'itinerary'">
+            <button v-for="cat in ['景點', '美食', '購物', '住宿', '航班', '其他']" :key="cat" @click="selectAddType(cat)" class="w-full px-3.5 py-2 rounded-xl flex items-center justify-between text-xs font-bold text-beigetone-800 hover:bg-beigetone-100 transition">
+              <span>{{ cat }}</span>
+              <i class="fa-solid fa-angle-right text-beigetone-400"></i>
+            </button>
+          </template>
 
-        <template v-else-if="currentTab === 'drive'">
-          <button v-for="type in ['租車', '加油', '停車場', '過路費']" :key="type" @click="selectAddType(type)" class="w-full px-3.5 py-2 rounded-xl flex items-center justify-between text-xs font-bold text-beigetone-800 hover:bg-beigetone-100 transition">
-            <span>{{ type }}</span>
-            <i class="fa-solid fa-angle-right text-beigetone-400"></i>
-          </button>
-        </template>
+          <template v-else-if="currentTab === 'drive'">
+            <button v-for="type in ['租車', '加油', '停車場', '過路費']" :key="type" @click="selectAddType(type)" class="w-full px-3.5 py-2 rounded-xl flex items-center justify-between text-xs font-bold text-beigetone-800 hover:bg-beigetone-100 transition">
+              <span>{{ type }}</span>
+              <i class="fa-solid fa-angle-right text-beigetone-400"></i>
+            </button>
+          </template>
+        </div>
+
+        <button @click="showAddMenu = !showAddMenu" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
+          <i :class="showAddMenu ? 'fa-solid fa-xmark text-xl' : 'fa-solid fa-plus'"></i>
+        </button>
       </div>
 
-      <button @click="showAddMenu = !showAddMenu" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
-        <i :class="showAddMenu ? 'fa-solid fa-xmark text-xl' : 'fa-solid fa-plus'"></i>
-      </button>
-    </div>
+      <div v-else-if="currentTab === 'preparation'" class="fixed bottom-6 right-6 z-40">
+        <button @click="openPrepCategoryModal()" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
 
-    <div v-else-if="currentTab === 'preparation'" class="fixed bottom-6 right-6 z-40">
-      <button @click="openPrepCategoryModal()" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
-        <i class="fa-solid fa-plus"></i>
-      </button>
-    </div>
-
-    <div v-else class="fixed bottom-6 right-6 z-40">
-      <button @click="openAddModal()" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
-        <i class="fa-solid fa-plus"></i>
-      </button>
-    </div>
+      <div v-else class="fixed bottom-6 right-6 z-40">
+        <button @click="openAddModal()" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition">
+          <i class="fa-solid fa-plus"></i>
+        </button>
+      </div>
+    </template>
 
     <!-- 行前準備類別編輯/新增 Modal -->
-    <div v-if="showPrepCatModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div v-if="showPrepCatModal && isHost" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-sm rounded-[28px] p-6 space-y-4 shadow-2xl">
         <div class="flex justify-between items-center">
           <h3 class="font-bold text-lg text-beigetone-900">{{ editingPrepCatId ? '編輯準備類別' : '新增準備類別' }}</h3>
@@ -861,7 +846,7 @@
     </div>
 
     <!-- 修改日期彈窗 -->
-    <div v-if="showDateModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div v-if="showDateModal && isHost" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-sm rounded-[28px] p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center">
           <h3 class="font-bold text-lg text-beigetone-900">修改 Day {{ selectedDayIndex + 1 }} 日期</h3>
@@ -883,7 +868,7 @@
     </div>
 
     <!-- 編輯 / 新增彈出視窗 -->
-    <div v-if="showModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end justify-center">
+    <div v-if="showModal && isHost" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end justify-center">
       <div class="bg-white w-full max-w-md rounded-t-[28px] p-6 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
         <div class="flex justify-between items-center">
           <h3 class="font-bold text-lg text-beigetone-900">{{ isEditing ? '編輯項目' : '新增項目' }}</h3>
@@ -906,7 +891,7 @@
               <input v-model="formData.arrCn" placeholder="目的中文 (例: 成田)" class="w-1/2 bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             </div>
             <div class="space-y-1">
-              <label class="text-xs font-bold text-beigetone-800">起飛時間 (用於時間軸排序與顯示)：</label>
+              <label class="text-xs font-bold text-beigetone-800">起飛時間：</label>
               <input type="time" v-model="formData.time" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm font-bold">
             </div>
             <div class="flex gap-2">
@@ -935,44 +920,44 @@
           </div>
 
           <template v-if="formData.type === '租車'">
-            <input v-model="formData.company" placeholder="租車公司名稱 (例: TOYOTA Rent a Car)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.carModel" placeholder="車型 / 車號 (例: Yaris / 沖繩 500)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.company" placeholder="租車公司名稱" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.carModel" placeholder="車型 / 車號" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             <input v-model="formData.reservationNo" placeholder="預約號碼 (選填)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             <input v-model="formData.mapCode" placeholder="取車門市 MapCode (選填)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             <input v-model="formData.pickupStore" placeholder="取車門市名稱" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.pickupTime" placeholder="取車時間 (例: 9/6 10:00)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.pickupTime" placeholder="取車時間" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             <input v-model="formData.returnStore" placeholder="還車門市名稱" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.returnTime" placeholder="還車時間 (例: 9/10 17:00)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.phone" placeholder="門市電話 (例: +81-476-32-1020)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.returnTime" placeholder="還車時間" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.phone" placeholder="門市電話" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             <input v-model="formData.mapUrl" placeholder="Google Maps 取車點連結" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
           </template>
 
           <template v-else-if="formData.type === '加油'">
-            <input v-model="formData.stationName" placeholder="加油站名稱 (例: ENEOS 成田機場前店)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.gasType" placeholder="油品種類 (例: Regular 赤色 / 柴油)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.stationName" placeholder="加油站名稱" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.gasType" placeholder="油品種類" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             <input v-model="formData.mapCode" placeholder="MapCode (選填)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.mapUrl" placeholder="Google Maps 加油站連結" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-            <textarea v-model="formData.note" placeholder="備註 (例: 還車前記得在此加滿油並索取發票)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm h-16 whitespace-pre-wrap"></textarea>
+            <input v-model="formData.mapUrl" placeholder="Google Maps 連結" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <textarea v-model="formData.note" placeholder="備註" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm h-16 whitespace-pre-wrap"></textarea>
           </template>
 
           <template v-else-if="formData.type === '停車場'">
-            <input v-model="formData.parkingName" placeholder="停車場名稱 / 景點停車場" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.feeNote" placeholder="收費說明 (例: 1小時 ¥300 / 夜間最大上限 ¥800)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.mapUrl" placeholder="Google Maps 停車場連結" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-            <textarea v-model="formData.note" placeholder="備註 (例: 車位號碼 12 號、只能付現)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm h-16 whitespace-pre-wrap"></textarea>
+            <input v-model="formData.parkingName" placeholder="停車場名稱" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.feeNote" placeholder="收費說明" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.mapUrl" placeholder="Google Maps 連結" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <textarea v-model="formData.note" placeholder="備註" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm h-16 whitespace-pre-wrap"></textarea>
           </template>
 
           <template v-else-if="formData.type === '過路費'">
-            <input v-model="formData.route" placeholder="路線 / 區間 (例: 成田IC ➔ 首都高)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.route" placeholder="路線 / 區間" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
             <input type="number" v-model="formData.amount" placeholder="金額 (日幣 JPY)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-            <input v-model="formData.note" placeholder="備註 (例: ETC 自動扣款)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+            <input v-model="formData.note" placeholder="備註" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
           </template>
         </div>
 
         <div v-if="currentTab === 'shopping'" class="space-y-3">
           <input v-model="formData.name" placeholder="商品名稱" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
           <input type="number" v-model="formData.price" placeholder="預估金額 (日幣 JPY，選填)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
-          <input v-model="formData.location" placeholder="購買地點 / 店名 (例: 唐吉訶德 澀谷店)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
+          <input v-model="formData.location" placeholder="購買地點 / 店名" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
           <input v-model="formData.mapUrl" placeholder="Google Maps 導航連結 (選填)" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2 text-sm">
           <div>
             <label class="text-xs font-bold text-beigetone-800 block mb-1">商品照片</label>
@@ -990,7 +975,7 @@
             <option>現金</option><option>信用卡</option>
           </select>
           <div>
-            <label class="text-xs font-bold text-beigetone-800 block mb-1">收據 / 明細 / 消費照片</label>
+            <label class="text-xs font-bold text-beigetone-800 block mb-1">收據 / 明細照片</label>
             <input type="file" @change="handleImageUpload" class="w-full text-xs text-beigetone-800" accept="image/*">
             <div v-if="formData.image" class="mt-2 relative w-20 h-20 rounded-xl overflow-hidden border border-beigetone-200">
               <img :src="formData.image" class="w-full h-full object-cover">
@@ -1012,19 +997,21 @@
 </div>
 
 <script>
-  const { createApp, ref, computed, watch, onMounted } = Vue;
+  const { createApp, ref, computed, watch } = Vue;
 
   createApp({
     setup() {
-      const APP_PASSWORD = "0214";
+      const HOST_PASSWORD = "0214";
       const isAuthenticated = ref(false);
+      const userRole = ref('visitor'); // 'host' 或 'visitor'
       const passwordInput = ref('');
       const passwordError = ref(false);
-      const userEmail = ref('');
-      const isSaving = ref(false);
 
-      const checkPassword = () => {
-        if (String(passwordInput.value || '').trim() === APP_PASSWORD) {
+      const isHost = computed(() => userRole.value === 'host');
+
+      const checkHostPassword = () => {
+        if (String(passwordInput.value || '').trim() === HOST_PASSWORD) {
+          userRole.value = 'host';
           isAuthenticated.value = true;
           passwordError.value = false;
         } else {
@@ -1032,176 +1019,73 @@
         }
       };
 
-      // 改用 signInWithPopup 進行 Google 登入
-      const loginWithGoogle = async () => {
-        const fb = window.firebaseApp;
-        if (!fb) return alert('Firebase 尚未初始化');
-        try {
-          const provider = new fb.GoogleAuthProvider();
-          const result = await fb.signInWithPopup(fb.auth, provider);
-          if (result && result.user) {
-            userEmail.value = result.user.email;
-            isAuthenticated.value = true;
-          }
-        } catch (e) {
-          alert('Google 登入失敗: ' + e.message);
-        }
+      const enterAsVisitor = () => {
+        userRole.value = 'visitor';
+        isAuthenticated.value = true;
+        passwordError.value = false;
       };
 
-      const loginAnonymouslyUser = async () => {
-        const fb = window.firebaseApp;
-        if (!fb) return alert('Firebase 尚未初始化');
-        try {
-          await fb.signInAnonymously(fb.auth);
-          userEmail.value = '匿名協作者';
-          isAuthenticated.value = true;
-        } catch (e) {
-          alert('匿名登入失敗: ' + e.message);
-        }
-      };
-
-      const logoutFirebase = async () => {
-        const fb = window.firebaseApp;
-        if (fb) await fb.signOut(fb.auth);
+      const logout = () => {
         isAuthenticated.value = false;
+        passwordInput.value = '';
         currentProjectId.value = null;
       };
 
-      // 頁面載入時檢查 Firebase 登入狀態
-      onMounted(() => {
-        const fb = window.firebaseApp;
-        if (!fb) return;
-
-        // 監聽 Firebase 登入狀態
-        fb.onAuthStateChanged(fb.auth, (user) => {
-          if (user) {
-            isAuthenticated.value = true;
-            userEmail.value = user.email || (user.isAnonymous ? '匿名協作者' : '已登入使用者');
-          }
-        });
-      });
-
-      // 預設專案資料清單
-      const getDefaultProjects = () => [{
-        id: 'default_tokyo',
-        title: '東京極簡五日遊',
-        dateRange: '2026/09/06 - 2026/09/10',
-        description: '初次東京自由行、淺草寺與自駕',
-        bannerUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1920&auto=format&fit=crop',
-        days: [
-          { dateDisplay: '9/6 (日)' },
-          { dateDisplay: '9/7 (一)' },
-          { dateDisplay: '9/8 (二)' },
-          { dateDisplay: '9/9 (三)' },
-          { dateDisplay: '9/10 (四)' },
-        ],
-        scheduleData: {
-          0: [
-            { id: '1', category: '航班', time: '08:15', flightNo: 'JX800', depAirport: 'TPE', depCn: '台北桃園', arrAirport: 'NRT', arrCn: '東京成田', depTime: '08:15', arrTime: '12:30' },
-            { id: '2', category: '景點', time: '14:00', name: '淺草寺', ticket: '免費', note: '買人形燒' }
-          ]
-        },
-        prepCategories: [
-          {
-            id: '1',
-            title: '證件與重要文件',
-            icon: 'fa-solid fa-passport',
-            items: [
-              { id: '1-1', name: '護照 (檢查有效期6個月以上)', completed: false },
-              { id: '1-2', name: '日航/機票電子憑證', completed: false }
+      // 專案多重管理系統
+      const loadProjects = () => {
+        try {
+          const saved = localStorage.getItem('trip_projects_list_v1');
+          if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        return [{
+          id: 'default_tokyo',
+          title: '東京極簡五日遊',
+          dateRange: '2026/09/06 - 2026/09/10',
+          description: '初次東京自由行、淺草寺與自駕',
+          bannerUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1920&auto=format&fit=crop',
+          days: [
+            { dateDisplay: '9/6 (日)' },
+            { dateDisplay: '9/7 (一)' },
+            { dateDisplay: '9/8 (二)' },
+            { dateDisplay: '9/9 (三)' },
+            { dateDisplay: '9/10 (四)' },
+          ],
+          scheduleData: {
+            0: [
+              { id: '1', category: '航班', time: '08:15', flightNo: 'JX800', depAirport: 'TPE', depCn: '台北桃園', arrAirport: 'NRT', arrCn: '東京成田', depTime: '08:15', arrTime: '12:30' },
+              { id: '2', category: '景點', time: '14:00', name: '淺草寺', ticket: '免費', note: '買人形燒' }
             ]
-          }
-        ],
-        driveList: [
-          { id: '1', type: '租車', company: 'Toyota Rent-a-Car', carModel: 'Yaris', reservationNo: 'TR-882910', mapCode: '33 157 281*00', pickupStore: '成田機場 T1 店', pickupTime: '9/6 13:30', returnStore: '成田機場 T1 店', returnTime: '9/10 16:00', phone: '+81-476-32-1020', mapUrl: '' }
-        ],
-        shoppingList: [
-          { id: '1', name: '合利他命 EX Plus強效錠', price: 5980, location: '唐吉訶德 澀谷店', mapUrl: '', image: '' }
-        ],
-        expenses: [
-          { id: '1', category: '飲食', name: '敘敘苑燒肉', amount: 12000, payMethod: '信用卡', date: '2026-09-06', image: '' }
-        ]
-      }];
+          },
+          prepCategories: [
+            {
+              id: '1',
+              title: '證件與重要文件',
+              icon: 'fa-solid fa-passport',
+              items: [
+                { id: '1-1', name: '護照 (檢查有效期6個月以上)', completed: false },
+                { id: '1-2', name: '日航/機票電子憑證', completed: false }
+              ]
+            }
+          ],
+          driveList: [
+            { id: '1', type: '租車', company: 'Toyota Rent-a-Car', carModel: 'Yaris', reservationNo: 'TR-882910', mapCode: '33 157 281*00', pickupStore: '成田機場 T1 店', pickupTime: '9/6 13:30', returnStore: '成田機場 T1 店', returnTime: '9/10 16:00', phone: '+81-476-32-1020', mapUrl: '' }
+          ],
+          shoppingList: [
+            { id: '1', name: '合利他命 EX Plus強效錠', price: 5980, location: '唐吉訶德 澀谷店', mapUrl: '', image: '' }
+          ],
+          expenses: [
+            { id: '1', category: '飲食', name: '敘敘苑燒肉', amount: 12000, payMethod: '信用卡', date: '2026-09-06', image: '' }
+          ]
+        }];
+      };
 
-      const projects = ref(getDefaultProjects());
+      const projects = ref(loadProjects());
       const currentProjectId = ref(null);
       const showProjectModal = ref(false);
       const isEditingProject = ref(false);
       const editingProjectId = ref(null);
       const newProjectForm = ref({ title: '', dateRange: '', description: '' });
 
-      let unsubscribeSnapshot = null;
-      let isRemoteUpdating = false;
-
-      // 進入特定專案時，啟動該專案房間的即時同步監聽
-      const bindProjectSync = (projectId) => {
-        const fb = window.firebaseApp;
-        if (!fb) return;
-
-        // 取消先前的監聽
-        if (unsubscribeSnapshot) {
-          unsubscribeSnapshot();
-          unsubscribeSnapshot = null;
-        }
-
-        const docRef = fb.doc(fb.db, "shared_trips", projectId);
-
-        // 建立即時監聽
-        unsubscribeSnapshot = fb.onSnapshot(docRef, async (docSnap) => {
-          if (docSnap.exists()) {
-            const remoteProj = docSnap.data();
-            if (remoteProj) {
-              isRemoteUpdating = true;
-              const idx = projects.value.findIndex(p => p.id === projectId);
-              if (idx !== -1) {
-                projects.value[idx] = remoteProj;
-              } else {
-                projects.value.push(remoteProj);
-              }
-              setTimeout(() => { isRemoteUpdating = false; }, 300);
-            }
-          } else {
-            // 若雲端房間尚無資料，將目前的專案資料寫入雲端初始化
-            const currentProj = projects.value.find(p => p.id === projectId);
-            if (currentProj) {
-              try {
-                await fb.setDoc(docRef, currentProj);
-              } catch (e) {
-                console.error("初始化房間失敗: ", e);
-              }
-            }
-          }
-        });
-      };
-
-      // 將當前專案同步至雲端房間
-      const saveCurrentProjectToFirestore = async () => {
-        if (isRemoteUpdating || !currentProjectId.value) return;
-        const fb = window.firebaseApp;
-        if (!fb) return;
-
-        const currentProj = projects.value.find(p => p.id === currentProjectId.value);
-        if (!currentProj) return;
-
-        isSaving.value = true;
-        try {
-          const docRef = fb.doc(fb.db, "shared_trips", currentProjectId.value);
-          await fb.setDoc(docRef, JSON.parse(JSON.stringify(currentProj)), { merge: true });
-        } catch (e) {
-          console.error("即時同步失敗: ", e);
-        } finally {
-          setTimeout(() => { isSaving.value = false; }, 500);
-        }
-      };
-
-      // 監聽當前選定專案的資料變化，自動同步給所有協作者
-      watch(projects, () => {
-        if (isAuthenticated.value && currentProjectId.value) {
-          saveCurrentProjectToFirestore();
-        }
-      }, { deep: true });
-
-      // 從日期字串中萃取出結束日期 (用於排序與判斷是否已結束)
       const parseProjectEndDate = (dateRangeStr) => {
         if (!dateRangeStr) return new Date(9999, 0, 1);
         const matches = dateRangeStr.match(/(\d{1,4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})|(\d{1,2})[\/\.-](\d{1,2})/g);
@@ -1257,6 +1141,7 @@
       });
 
       const openNewProjectModal = () => {
+        if (!isHost.value) return;
         isEditingProject.value = false;
         editingProjectId.value = null;
         newProjectForm.value = { title: '', dateRange: '', description: '' };
@@ -1264,6 +1149,7 @@
       };
 
       const openEditProjectModal = (proj) => {
+        if (!isHost.value) return;
         isEditingProject.value = true;
         editingProjectId.value = proj.id;
         newProjectForm.value = { 
@@ -1275,7 +1161,7 @@
       };
 
       const saveProject = () => {
-        if (!newProjectForm.value.title.trim()) return;
+        if (!isHost.value || !newProjectForm.value.title.trim()) return;
 
         if (isEditingProject.value && editingProjectId.value) {
           const proj = projects.value.find(p => p.id === editingProjectId.value);
@@ -1302,31 +1188,28 @@
           projects.value.push(newProj);
           selectProject(newId);
         }
+        saveProjectsToStorage();
         showProjectModal.value = false;
       };
 
       const selectProject = (id) => {
         currentProjectId.value = id;
         selectedDayIndex.value = 0;
-        bindProjectSync(id);
-      };
-
-      const quitProject = () => {
-        if (unsubscribeSnapshot) {
-          unsubscribeSnapshot();
-          unsubscribeSnapshot = null;
-        }
-        currentProjectId.value = null;
-        showNavMenu.value = false;
       };
 
       const deleteProject = (id) => {
+        if (!isHost.value) return;
         if (confirm('確定要刪除這個行程專案嗎？')) {
           projects.value = projects.value.filter(p => p.id !== id);
+          saveProjectsToStorage();
           if (currentProjectId.value === id) {
-            quitProject();
+            currentProjectId.value = null;
           }
         }
+      };
+
+      const saveProjectsToStorage = () => {
+        localStorage.setItem('trip_projects_list_v1', JSON.stringify(projects.value));
       };
 
       const currentProject = computed(() => {
@@ -1335,38 +1218,42 @@
 
       const bannerUrl = computed({
         get: () => currentProject.value?.bannerUrl || '',
-        set: (val) => { if (currentProject.value) { currentProject.value.bannerUrl = val; } }
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.bannerUrl = val; saveProjectsToStorage(); } }
       });
 
       const days = computed({
         get: () => currentProject.value?.days || [],
-        set: (val) => { if (currentProject.value) { currentProject.value.days = val; } }
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.days = val; saveProjectsToStorage(); } }
       });
 
       const scheduleData = computed({
         get: () => currentProject.value?.scheduleData || {},
-        set: (val) => { if (currentProject.value) { currentProject.value.scheduleData = val; } }
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.scheduleData = val; saveProjectsToStorage(); } }
       });
 
       const prepCategories = computed({
         get: () => currentProject.value?.prepCategories || [],
-        set: (val) => { if (currentProject.value) { currentProject.value.prepCategories = val; } }
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.prepCategories = val; saveProjectsToStorage(); } }
       });
 
       const driveList = computed({
         get: () => currentProject.value?.driveList || [],
-        set: (val) => { if (currentProject.value) { currentProject.value.driveList = val; } }
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.driveList = val; saveProjectsToStorage(); } }
       });
 
       const shoppingList = computed({
         get: () => currentProject.value?.shoppingList || [],
-        set: (val) => { if (currentProject.value) { currentProject.value.shoppingList = val; } }
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.shoppingList = val; saveProjectsToStorage(); } }
       });
 
       const expenses = computed({
         get: () => currentProject.value?.expenses || [],
-        set: (val) => { if (currentProject.value) { currentProject.value.expenses = val; } }
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.expenses = val; saveProjectsToStorage(); } }
       });
+
+      watch(projects, () => {
+        saveProjectsToStorage();
+      }, { deep: true });
 
       const currentTab = ref('itinerary');
       const showNavMenu = ref(false);
@@ -1387,35 +1274,24 @@
       };
 
       const draggedIndex = ref(null);
-      
-      const onDragStart = (index, e) => {
-        draggedIndex.value = index;
-        if (e.dataTransfer) {
-          e.dataTransfer.effectAllowed = 'move';
-        }
-      };
-
+      const onDragStart = (index, e) => { if (!isHost.value) return; draggedIndex.value = index; };
       const onDragOver = (targetIndex, e) => {
+        if (!isHost.value) return;
         if (draggedIndex.value !== null && draggedIndex.value !== targetIndex) {
           const item = prepCategories.value.splice(draggedIndex.value, 1)[0];
           prepCategories.value.splice(targetIndex, 0, item);
           draggedIndex.value = targetIndex;
         }
       };
-
-      const onDrop = (targetIndex, e) => {
-        draggedIndex.value = null;
-      };
-
-      const onDragEnd = () => {
-        draggedIndex.value = null;
-      };
+      const onDrop = (targetIndex, e) => { draggedIndex.value = null; };
+      const onDragEnd = () => { draggedIndex.value = null; };
 
       const touchStartIndex = ref(null);
       let touchStartY = 0;
       let lastSwappedY = 0;
 
       const onTouchStart = (index, e) => {
+        if (!isHost.value) return;
         touchStartIndex.value = index;
         draggedIndex.value = index;
         touchStartY = e.touches[0].clientY;
@@ -1423,15 +1299,12 @@
       };
 
       const onTouchMove = (e) => {
-        if (touchStartIndex.value === null) return;
-        
+        if (!isHost.value || touchStartIndex.value === null) return;
         const currentY = e.touches[0].clientY;
         if (Math.abs(currentY - lastSwappedY) < 25) return;
-
         const touch = e.touches[0];
         const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
         if (!targetEl) return;
-
         const cardEl = targetEl.closest('.prep-card');
         if (cardEl && cardEl.dataset.index !== undefined) {
           const targetIndex = parseInt(cardEl.dataset.index, 10);
@@ -1445,22 +1318,12 @@
         }
       };
 
-      const onTouchEnd = () => {
-        touchStartIndex.value = null;
-        draggedIndex.value = null;
-      };
+      const onTouchEnd = () => { touchStartIndex.value = null; draggedIndex.value = null; };
 
       const prepIcons = [
-        'fa-solid fa-suitcase',
-        'fa-solid fa-passport',
-        'fa-solid fa-briefcase-medical',
-        'fa-solid fa-shirt',
-        'fa-solid fa-plug',
-        'fa-solid fa-camera',
-        'fa-solid fa-bag-shopping',
-        'fa-solid fa-utensils',
-        'fa-solid fa-car',
-        'fa-solid fa-ticket'
+        'fa-solid fa-suitcase', 'fa-solid fa-passport', 'fa-solid fa-briefcase-medical',
+        'fa-solid fa-shirt', 'fa-solid fa-plug', 'fa-solid fa-camera',
+        'fa-solid fa-bag-shopping', 'fa-solid fa-utensils', 'fa-solid fa-car', 'fa-solid fa-ticket'
       ];
 
       const showPrepCatModal = ref(false);
@@ -1468,6 +1331,7 @@
       const prepCatForm = ref({ title: '', icon: 'fa-solid fa-suitcase' });
 
       const openPrepCategoryModal = (cat = null) => {
+        if (!isHost.value) return;
         if (cat) {
           editingPrepCatId.value = cat.id;
           prepCatForm.value = { title: cat.title, icon: cat.icon || 'fa-solid fa-suitcase' };
@@ -1479,8 +1343,7 @@
       };
 
       const savePrepCategory = () => {
-        if (!prepCatForm.value.title.trim()) return;
-        
+        if (!isHost.value || !prepCatForm.value.title.trim()) return;
         if (editingPrepCatId.value) {
           const catIndex = prepCategories.value.findIndex(c => c.id === editingPrepCatId.value);
           if (catIndex !== -1) {
@@ -1576,6 +1439,7 @@
       };
 
       const openAddPrepItemModal = (cat) => {
+        if (!isHost.value) return;
         const name = prompt(`在「${cat.title}」新增項目名稱：`);
         if (name && name.trim()) {
           if (!cat.items) cat.items = [];
@@ -1589,12 +1453,14 @@
       };
 
       const deletePrepCategory = (catId) => {
+        if (!isHost.value) return;
         if (confirm('確定要刪除整個類別及其項目嗎？')) {
           prepCategories.value = prepCategories.value.filter(c => c.id !== catId);
         }
       };
 
       const deletePrepItem = (catId, itemId, itemName) => {
+        if (!isHost.value) return;
         if (confirm(`確定要刪除項目「${itemName || '此項目'}」嗎？`)) {
           const cat = prepCategories.value.find(c => c.id === catId);
           if (cat && cat.items) {
@@ -1616,232 +1482,184 @@
         if (phone) window.location.href = `tel:${phone.replace(/[^0-9+]/g, '')}`;
       };
 
-      const previewImg = (src) => {
-        previewImageSrc.value = src;
-      };
-
-      const showLargeJapanese = (item) => {
-        largeJapaneseItem.value = item;
-      };
+      const previewImg = (src) => { previewImageSrc.value = src; };
+      const showLargeJapanese = (item) => { largeJapaneseItem.value = item; };
 
       const speakJapanese = (text) => {
-        if (!('speechSynthesis' in window)) {
-          alert('您的瀏覽器不支援語音朗讀功能');
-          return;
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.lang = 'ja-JP';
+          utterance.rate = 0.9;
+          window.speechSynthesis.speak(utterance);
+        } else {
+          alert('您的瀏覽器不支援語音播放功能');
         }
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'ja-JP';
-        utterance.rate = 0.9;
-        window.speechSynthesis.speak(utterance);
       };
 
       const addNewDay = () => {
-        const nextDayNum = days.value.length + 1;
-        days.value.push({ dateDisplay: `Day ${nextDayNum}` });
-        if (!scheduleData.value[days.value.length - 1]) {
-          scheduleData.value[days.value.length - 1] = [];
-        }
-      };
-
-      const deleteCurrentDay = () => {
-        if (days.value.length <= 1) return;
-        if (confirm(`確定要刪除 Day ${selectedDayIndex.value + 1} 嗎？`)) {
-          days.value.splice(selectedDayIndex.value, 1);
-          const newSch = {};
-          let newIdx = 0;
-          days.value.forEach((_, oldIdx) => {
-            if (oldIdx !== selectedDayIndex.value) {
-              newSch[newIdx] = scheduleData.value[oldIdx] || [];
-              newIdx++;
-            }
-          });
-          scheduleData.value = newSch;
-          selectedDayIndex.value = Math.max(0, selectedDayIndex.value - 1);
+        if (!isHost.value) return;
+        const input = prompt(`請輸入 Day ${days.value.length + 1} 的日期與星期：`, `9/${6 + days.value.length} (日)`);
+        if (input) {
+          days.value.push({ dateDisplay: input });
+          selectedDayIndex.value = days.value.length - 1;
         }
       };
 
       const openDateModal = () => {
-        dateInputVal.value = '';
+        if (!isHost.value) return;
+        const now = new Date();
+        const year = now.getFullYear();
+        dateInputVal.value = `${year}-09-06`;
         showDateModal.value = true;
       };
 
       const saveDayDate = () => {
-        if (dateInputVal.value) {
-          const parts = dateInputVal.value.split('-');
-          if (parts.length === 3) {
-            const m = parseInt(parts[1], 10);
-            const d = parseInt(parts[2], 10);
-            const dateObj = new Date(parseInt(parts[0], 10), m - 1, d);
-            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-            const wStr = weekdays[dateObj.getDay()];
-            days.value[selectedDayIndex.value].dateDisplay = `${m}/${d} (${wStr})`;
-            days.value = [...days.value];
+        if (!isHost.value || !dateInputVal.value) return;
+        const parts = dateInputVal.value.split('-');
+        if (parts.length === 3) {
+          const m = parseInt(parts[1], 10);
+          const d = parseInt(parts[2], 10);
+          const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+          const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+          const wk = weekdays[dateObj.getDay()];
+          if (days.value[selectedDayIndex.value]) {
+            days.value[selectedDayIndex.value].dateDisplay = `${m}/${d} (${wk})`;
           }
         }
         showDateModal.value = false;
       };
 
-      const selectAddType = (typeOrCat) => {
-        showAddMenu.value = false;
-        isEditing.value = false;
-        if (currentTab.value === 'itinerary') {
-          formData.value = {
-            id: Date.now().toString(),
-            category: typeOrCat,
-            time: '10:00',
-            name: '',
-            mapUrl: '',
-            ticket: '',
-            note: '',
-            flightNo: '',
-            depAirport: '',
-            depCn: '',
-            arrAirport: '',
-            arrCn: '',
-            depTime: '',
-            arrTime: ''
-          };
-        } else if (currentTab.value === 'drive') {
-          formData.value = {
-            id: Date.now().toString(),
-            type: typeOrCat,
-            company: '',
-            carModel: '',
-            reservationNo: '',
-            mapCode: '',
-            pickupStore: '',
-            pickupTime: '',
-            returnStore: '',
-            returnTime: '',
-            phone: '',
-            mapUrl: '',
-            stationName: '',
-            gasType: '',
-            note: '',
-            parkingName: '',
-            feeNote: '',
-            route: '',
-            amount: 0
-          };
+      const deleteCurrentDay = () => {
+        if (!isHost.value) return;
+        if (confirm(`確定要刪除 Day ${selectedDayIndex.value + 1} 的整天行程嗎？`)) {
+          days.value.splice(selectedDayIndex.value, 1);
+          const sch = { ...scheduleData.value };
+          delete sch[selectedDayIndex.value];
+          scheduleData.value = sch;
+          selectedDayIndex.value = Math.max(0, selectedDayIndex.value - 1);
         }
-        showModal.value = true;
       };
 
-      const openAddModal = () => {
-        isEditing.value = false;
-        if (currentTab.value === 'shopping') {
-          formData.value = { id: Date.now().toString(), name: '', price: '', location: '', mapUrl: '', image: '' };
-        } else if (currentTab.value === 'expense') {
-          formData.value = { id: Date.now().toString(), category: '飲食', name: '', amount: '', payMethod: '現金', date: new Date().toISOString().split('T')[0], image: '' };
+      const uploadBanner = (e) => {
+        if (!isHost.value) return;
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (evt) => bannerUrl.value = evt.target.result;
+          reader.readAsDataURL(file);
         }
+      };
+
+      const handleImageUpload = (e) => {
+        if (!isHost.value) return;
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (evt) => formData.value.image = evt.target.result;
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const selectAddType = (type) => {
+        if (!isHost.value) return;
+        showAddMenu.value = false;
+        openAddModal(type);
+      };
+
+      const openAddModal = (type = null) => {
+        if (!isHost.value) return;
+        isEditing.value = false;
+        if (currentTab.value === 'itinerary') formData.value = { category: type || '景點', time: '10:00' };
+        else if (currentTab.value === 'drive') formData.value = { type: type || '租車' };
+        else if (currentTab.value === 'expense') formData.value = { category: '飲食', payMethod: '現金' };
+        else formData.value = {};
         showModal.value = true;
       };
 
       const openEditModal = (item) => {
+        if (!isHost.value) return;
         isEditing.value = true;
-        formData.value = JSON.parse(JSON.stringify(item));
+        formData.value = { ...item };
         showModal.value = true;
       };
 
-      const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          formData.value.image = event.target.result;
-        };
-        reader.readAsDataURL(file);
-      };
-
-      const uploadBanner = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          bannerUrl.value = event.target.result;
-        };
-        reader.readAsDataURL(file);
-      };
-
       const saveData = () => {
+        if (!isHost.value) return;
         if (currentTab.value === 'itinerary') {
-          if (!scheduleData.value[selectedDayIndex.value]) {
-            scheduleData.value[selectedDayIndex.value] = [];
-          }
+          const sch = { ...scheduleData.value };
+          if (!sch[selectedDayIndex.value]) sch[selectedDayIndex.value] = [];
           if (isEditing.value) {
-            const list = scheduleData.value[selectedDayIndex.value];
-            const idx = list.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) list[idx] = formData.value;
+            const idx = sch[selectedDayIndex.value].findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) sch[selectedDayIndex.value][idx] = { ...formData.value };
           } else {
-            scheduleData.value[selectedDayIndex.value].push(formData.value);
+            sch[selectedDayIndex.value].push({ ...formData.value, id: Date.now().toString() });
           }
-          scheduleData.value = { ...scheduleData.value };
+          scheduleData.value = sch;
         } else if (currentTab.value === 'drive') {
+          const list = [...driveList.value];
           if (isEditing.value) {
-            const idx = driveList.value.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) driveList.value[idx] = formData.value;
+            const idx = list.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) list[idx] = { ...formData.value };
           } else {
-            driveList.value.push(formData.value);
+            list.push({ ...formData.value, id: Date.now().toString() });
           }
-          driveList.value = [...driveList.value];
+          driveList.value = list;
         } else if (currentTab.value === 'shopping') {
+          const list = [...shoppingList.value];
           if (isEditing.value) {
-            const idx = shoppingList.value.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) shoppingList.value[idx] = formData.value;
+            const idx = list.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) list[idx] = { ...formData.value };
           } else {
-            shoppingList.value.push(formData.value);
+            list.push({ ...formData.value, id: Date.now().toString() });
           }
-          shoppingList.value = [...shoppingList.value];
+          shoppingList.value = list;
         } else if (currentTab.value === 'expense') {
+          const list = [...expenses.value];
           if (isEditing.value) {
-            const idx = expenses.value.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) expenses.value[idx] = formData.value;
+            const idx = list.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) list[idx] = { ...formData.value };
           } else {
-            expenses.value.push(formData.value);
+            list.push({ ...formData.value, id: Date.now().toString(), date: new Date().toISOString().split('T')[0] });
           }
-          expenses.value = [...expenses.value];
+          expenses.value = list;
         }
         showModal.value = false;
       };
 
       const confirmDelete = () => {
-        if (!confirm('確定要刪除這個項目嗎？')) return;
-        if (currentTab.value === 'itinerary') {
-          const list = scheduleData.value[selectedDayIndex.value];
-          if (list) {
-            scheduleData.value[selectedDayIndex.value] = list.filter(i => i.id !== formData.value.id);
-            scheduleData.value = { ...scheduleData.value };
+        if (!isHost.value) return;
+        if (confirm('確定要刪除這筆資料嗎？')) {
+          if (currentTab.value === 'itinerary') {
+            const sch = { ...scheduleData.value };
+            sch[selectedDayIndex.value] = sch[selectedDayIndex.value].filter(i => i.id !== formData.value.id);
+            scheduleData.value = sch;
+          } else if (currentTab.value === 'drive') {
+            driveList.value = driveList.value.filter(i => i.id !== formData.value.id);
+          } else if (currentTab.value === 'shopping') {
+            shoppingList.value = shoppingList.value.filter(i => i.id !== formData.value.id);
+          } else if (currentTab.value === 'expense') {
+            expenses.value = expenses.value.filter(i => i.id !== formData.value.id);
           }
-        } else if (currentTab.value === 'drive') {
-          driveList.value = driveList.value.filter(i => i.id !== formData.value.id);
-        } else if (currentTab.value === 'shopping') {
-          shoppingList.value = shoppingList.value.filter(i => i.id !== formData.value.id);
-        } else if (currentTab.value === 'expense') {
-          expenses.value = expenses.value.filter(i => i.id !== formData.value.id);
+          showModal.value = false;
         }
-        showModal.value = false;
       };
 
       return {
-        isAuthenticated, passwordInput, passwordError, checkPassword,
-        loginWithGoogle, loginAnonymouslyUser, logoutFirebase, userEmail, isSaving,
-        projects, currentProjectId, activeProjects, endedProjects,
-        openNewProjectModal, openEditProjectModal, saveProject, selectProject, quitProject, deleteProject,
-        currentProject, bannerUrl, days, scheduleData, prepCategories, driveList, shoppingList, expenses,
-        currentTab, showNavMenu, showAddMenu, selectedDayIndex, showModal, showDateModal, dateInputVal,
-        isEditing, previewImageSrc, largeJapaneseItem, selectedJpCategory,
-        switchTab, draggedIndex, onDragStart, onDragOver, onDrop, onDragEnd,
-        onTouchStart, onTouchMove, onTouchEnd, prepIcons, showPrepCatModal, editingPrepCatId, prepCatForm,
-        openPrepCategoryModal, savePrepCategory, expandedPrepCategories, japanesePhrases, formData,
-        currentDaySchedule, totalExpense, togglePrepCategory, getCompletedPrepCount, openAddPrepItemModal,
-        deletePrepCategory, deletePrepItem, openMap, callPhone, previewImg, showLargeJapanese, speakJapanese,
-        addNewDay, deleteCurrentDay, openDateModal, saveDayDate, selectAddType, openAddModal, openEditModal,
-        handleImageUpload, uploadBanner, saveData, confirmDelete
+        isAuthenticated, userRole, isHost, passwordInput, passwordError, checkHostPassword, enterAsVisitor, logout,
+        projects, activeProjects, endedProjects, currentProjectId, showProjectModal, isEditingProject, newProjectForm, 
+        openNewProjectModal, openEditProjectModal, saveProject, selectProject, deleteProject,
+        currentTab, showNavMenu, showAddMenu, switchTab, bannerUrl, selectedDayIndex, days,
+        scheduleData, currentDaySchedule, driveList, shoppingList, expenses, totalExpense, japanesePhrases,
+        prepCategories, expandedPrepCategories, togglePrepCategory, getCompletedPrepCount, deletePrepCategory, deletePrepItem,
+        prepIcons, showPrepCatModal, editingPrepCatId, prepCatForm, openPrepCategoryModal, savePrepCategory, openAddPrepItemModal,
+        draggedIndex, onDragStart, onDragOver, onDrop, onDragEnd, onTouchStart, onTouchMove, onTouchEnd,
+        selectedJpCategory, showModal, showDateModal, dateInputVal, isEditing, formData, previewImageSrc, largeJapaneseItem, uploadBanner, handleImageUpload,
+        openMap, callPhone, previewImg, showLargeJapanese, speakJapanese, selectAddType, openAddModal, openEditModal, saveData, confirmDelete,
+        addNewDay, openDateModal, saveDayDate, deleteCurrentDay
       };
     }
   }).mount('#app');
 </script>
-
 </body>
 </html>
