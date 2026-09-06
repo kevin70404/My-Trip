@@ -5,7 +5,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
   <meta name="googlebot" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>日系極簡多功能行程表</title>
+  <title>日系極簡多功能行程表 (Firebase 多人即時同步版)</title>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -15,6 +15,30 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // 已替換為您的 Firebase 專案設定
+    const firebaseConfig = {
+      apiKey: "AIzaSyDh95N7ieaiyRkPJBn-MQynqdGQ-Wh-sTE",
+      authDomain: "web-app-ecf51.firebaseapp.com",
+      projectId: "web-app-ecf51",
+      storageBucket: "web-app-ecf51.firebasestorage.app",
+      messagingSenderId: "781452045981",
+      appId: "1:781452045981:web:729475b71d44ac6a59ee74",
+      measurementId: "G-7YWLFG6TME"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.firebaseApp = { auth, db, GoogleAuthProvider, signInWithPopup, signInAnonymously, onAuthStateChanged, signOut, doc, setDoc, getDoc, onSnapshot };
+  </script>
 
   <script>
     tailwind.config = {
@@ -78,26 +102,49 @@
 
 <div id="app">
 
-  <!-- ================= 1. 密碼驗證解鎖畫面 ================= -->
+  <!-- ================= 0. Firebase 登入與雲端狀態列 ================= -->
+  <div v-if="isAuthenticated" class="bg-white/80 backdrop-blur border-b border-beigetone-200 px-4 py-2 flex items-center justify-between text-xs text-beigetone-800 z-50 sticky top-0">
+    <div class="flex items-center gap-2 truncate">
+      <i class="fa-solid fa-users text-accent-terracotta"></i>
+      <span class="truncate">多人即時同步中 ({{ userEmail || '匿名登入' }})</span>
+      <span v-if="isSaving" class="text-[10px] bg-beigetone-200 px-1.5 py-0.5 rounded animate-pulse">同步中...</span>
+      <span v-else class="text-[10px] text-emerald-600 font-bold">已同步</span>
+    </div>
+    <button @click="logoutFirebase" class="text-beigetone-400 hover:text-beigetone-800 underline text-[11px] flex-shrink-0">
+      登出
+    </button>
+  </div>
+
+  <!-- ================= 1. 密碼驗證解鎖與 Firebase 登入畫面 ================= -->
   <div v-if="!isAuthenticated" class="fixed inset-0 bg-beigetone-100 z-50 flex flex-col items-center justify-center p-6 text-center">
-    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm border border-beigetone-200">
-      <div class="w-16 h-16 bg-beigetone-200 text-beigetone-800 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
+    <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm border border-beigetone-200 space-y-4">
+      <div class="w-16 h-16 bg-beigetone-200 text-beigetone-800 rounded-full flex items-center justify-center text-2xl mx-auto mb-2">
         <i class="fa-solid fa-lock"></i>
       </div>
       <h2 class="text-xl font-bold text-beigetone-900 mb-1">私人行程解鎖</h2>
-      <p class="text-xs text-beigetone-400 mb-6">此行程網頁受密碼保護，請輸入通行密碼</p>
+      <p class="text-xs text-beigetone-400 mb-4">此行程網頁受密碼保護，請輸入通行密碼並選擇雲端登入</p>
       
-      <form @submit.prevent="checkPassword">
-        <input type="text" inputmode="numeric" v-model="passwordInput" placeholder="請輸入密碼" 
-               class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-4 py-3 text-center text-lg tracking-widest font-bold focus:outline-none focus:border-beigetone-800 mb-4">
+      <form @submit.prevent="checkPassword" class="space-y-3">
+        <input type="password" inputmode="numeric" v-model="passwordInput" placeholder="請輸入通行密碼 (0214)" 
+               class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-4 py-3 text-center text-lg tracking-widest font-bold focus:outline-none focus:border-beigetone-800">
         
         <button type="submit" class="w-full bg-beigetone-800 text-white font-bold py-3 rounded-2xl shadow-md hover:bg-beigetone-900 transition active:scale-95">
-          解鎖進入
+          驗證密碼進入
         </button>
       </form>
 
-      <div v-if="passwordError" class="text-xs text-red-500 font-medium mt-3">
+      <div v-if="passwordError" class="text-xs text-red-500 font-medium mt-2">
         <i class="fa-solid fa-circle-exclamation mr-1"></i> 密碼錯誤，請重新輸入
+      </div>
+
+      <div class="pt-4 border-t border-beigetone-100 space-y-2">
+        <p class="text-[11px] text-beigetone-400">雲端同步身分登入：</p>
+        <button @click="loginWithGoogle" class="w-full bg-white border border-beigetone-300 text-beigetone-900 font-bold py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2 hover:bg-beigetone-50 transition shadow-sm">
+          <i class="fa-brands fa-google text-red-500"></i> 使用 Google 帳號同步
+        </button>
+        <button @click="loginAnonymouslyUser" class="w-full bg-beigetone-100 text-beigetone-800 font-bold py-2 rounded-2xl text-xs hover:bg-beigetone-200 transition">
+          略過/匿名快速進入
+        </button>
       </div>
     </div>
   </div>
@@ -107,7 +154,7 @@
     <div class="p-6 space-y-6">
       <div class="bg-white p-5 rounded-3xl shadow-sm border border-beigetone-200">
         <h1 class="text-lg font-bold text-beigetone-900">我的旅程專案</h1>
-        <p class="text-xs text-beigetone-400 mt-0.5">選擇一個專案進入編輯，或建立新旅程</p>
+        <p class="text-xs text-beigetone-400 mt-0.5">選擇一個專案進入即時協作，或建立新旅程</p>
       </div>
 
       <!-- 進行中 / 即將到來專案列表 -->
@@ -196,7 +243,7 @@
           </div>
           <div>
             <label class="text-xs font-bold text-beigetone-800 block mb-1">日期區間備註 (用於自動排序)</label>
-            <input v-model="newProjectForm.dateRange" placeholder="例如：2026/09/06 - 2026/09/10 或 9/6-9/10" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-beigetone-800">
+            <input v-model="newProjectForm.dateRange" placeholder="例如：2026/09/06 - 2026/09/10" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-beigetone-800">
           </div>
           <div>
             <label class="text-xs font-bold text-beigetone-800 block mb-1">簡短描述</label>
@@ -683,7 +730,7 @@
       <div v-if="showNavMenu" @click="showNavMenu = false" class="fixed inset-0 bg-black/20 backdrop-blur-xs z-30"></div>
 
       <div v-if="showNavMenu" class="absolute bottom-16 left-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beigetone-200 min-w-[170px] space-y-1 z-40 transition-all duration-200">
-        <button @click="currentProjectId = null; showNavMenu = false" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold text-accent-terracotta hover:bg-beigetone-100 transition border-b border-beigetone-100 mb-1">
+        <button @click="quitProject" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold text-accent-terracotta hover:bg-beigetone-100 transition border-b border-beigetone-100 mb-1">
           <i class="fa-solid fa-arrow-left-long w-5 text-center"></i>
           <span>切換行程專案</span>
         </button>
@@ -965,7 +1012,7 @@
 </div>
 
 <script>
-  const { createApp, ref, computed, watch } = Vue;
+  const { createApp, ref, computed, watch, onMounted, onUnmounted } = Vue;
 
   createApp({
     setup() {
@@ -973,6 +1020,8 @@
       const isAuthenticated = ref(false);
       const passwordInput = ref('');
       const passwordError = ref(false);
+      const userEmail = ref('');
+      const isSaving = ref(false);
 
       const checkPassword = () => {
         if (String(passwordInput.value || '').trim() === APP_PASSWORD) {
@@ -983,69 +1032,165 @@
         }
       };
 
-      // 專案多重管理系統
-      const loadProjects = () => {
+      // Firebase 登入設定
+      const loginWithGoogle = async () => {
+        const fb = window.firebaseApp;
+        if (!fb) return alert('Firebase 尚未初始化');
         try {
-          const saved = localStorage.getItem('trip_projects_list_v1');
-          if (saved) return JSON.parse(saved);
-        } catch(e) {}
-        // 預設給一個初始專案
-        return [{
-          id: 'default_tokyo',
-          title: '東京極簡五日遊',
-          dateRange: '2026/09/06 - 2026/09/10',
-          description: '初次東京自由行、淺草寺與自駕',
-          bannerUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1920&auto=format&fit=crop',
-          days: [
-            { dateDisplay: '9/6 (日)' },
-            { dateDisplay: '9/7 (一)' },
-            { dateDisplay: '9/8 (二)' },
-            { dateDisplay: '9/9 (三)' },
-            { dateDisplay: '9/10 (四)' },
-          ],
-          scheduleData: {
-            0: [
-              { id: '1', category: '航班', time: '08:15', flightNo: 'JX800', depAirport: 'TPE', depCn: '台北桃園', arrAirport: 'NRT', arrCn: '東京成田', depTime: '08:15', arrTime: '12:30' },
-              { id: '2', category: '景點', time: '14:00', name: '淺草寺', ticket: '免費', note: '買人形燒' }
-            ]
-          },
-          prepCategories: [
-            {
-              id: '1',
-              title: '證件與重要文件',
-              icon: 'fa-solid fa-passport',
-              items: [
-                { id: '1-1', name: '護照 (檢查有效期6個月以上)', completed: false },
-                { id: '1-2', name: '日航/機票電子憑證', completed: false }
-              ]
-            }
-          ],
-          driveList: [
-            { id: '1', type: '租車', company: 'Toyota Rent-a-Car', carModel: 'Yaris', reservationNo: 'TR-882910', mapCode: '33 157 281*00', pickupStore: '成田機場 T1 店', pickupTime: '9/6 13:30', returnStore: '成田機場 T1 店', returnTime: '9/10 16:00', phone: '+81-476-32-1020', mapUrl: '' }
-          ],
-          shoppingList: [
-            { id: '1', name: '合利他命 EX Plus強效錠', price: 5980, location: '唐吉訶德 澀谷店', mapUrl: '', image: '' }
-          ],
-          expenses: [
-            { id: '1', category: '飲食', name: '敘敘苑燒肉', amount: 12000, payMethod: '信用卡', date: '2026-09-06', image: '' }
-          ]
-        }];
+          const provider = new fb.GoogleAuthProvider();
+          const result = await fb.signInWithPopup(fb.auth, provider);
+          userEmail.value = result.user.email;
+          isAuthenticated.value = true;
+        } catch (e) {
+          alert('Google 登入失敗: ' + e.message);
+        }
       };
 
-      const projects = ref(loadProjects());
+      const loginAnonymouslyUser = async () => {
+        const fb = window.firebaseApp;
+        if (!fb) return alert('Firebase 尚未初始化');
+        try {
+          await fb.signInAnonymously(fb.auth);
+          userEmail.value = '匿名協作者';
+          isAuthenticated.value = true;
+        } catch (e) {
+          alert('匿名登入失敗: ' + e.message);
+        }
+      };
+
+      const logoutFirebase = async () => {
+        const fb = window.firebaseApp;
+        if (fb) await fb.signOut(fb.auth);
+        isAuthenticated.value = false;
+        currentProjectId.value = null;
+      };
+
+      // 預設專案資料清單
+      const getDefaultProjects = () => [{
+        id: 'default_tokyo',
+        title: '東京極簡五日遊',
+        dateRange: '2026/09/06 - 2026/09/10',
+        description: '初次東京自由行、淺草寺與自駕',
+        bannerUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1920&auto=format&fit=crop',
+        days: [
+          { dateDisplay: '9/6 (日)' },
+          { dateDisplay: '9/7 (一)' },
+          { dateDisplay: '9/8 (二)' },
+          { dateDisplay: '9/9 (三)' },
+          { dateDisplay: '9/10 (四)' },
+        ],
+        scheduleData: {
+          0: [
+            { id: '1', category: '航班', time: '08:15', flightNo: 'JX800', depAirport: 'TPE', depCn: '台北桃園', arrAirport: 'NRT', arrCn: '東京成田', depTime: '08:15', arrTime: '12:30' },
+            { id: '2', category: '景點', time: '14:00', name: '淺草寺', ticket: '免費', note: '買人形燒' }
+          ]
+        },
+        prepCategories: [
+          {
+            id: '1',
+            title: '證件與重要文件',
+            icon: 'fa-solid fa-passport',
+            items: [
+              { id: '1-1', name: '護照 (檢查有效期6個月以上)', completed: false },
+              { id: '1-2', name: '日航/機票電子憑證', completed: false }
+            ]
+          }
+        ],
+        driveList: [
+          { id: '1', type: '租車', company: 'Toyota Rent-a-Car', carModel: 'Yaris', reservationNo: 'TR-882910', mapCode: '33 157 281*00', pickupStore: '成田機場 T1 店', pickupTime: '9/6 13:30', returnStore: '成田機場 T1 店', returnTime: '9/10 16:00', phone: '+81-476-32-1020', mapUrl: '' }
+        ],
+        shoppingList: [
+          { id: '1', name: '合利他命 EX Plus強效錠', price: 5980, location: '唐吉訶德 澀谷店', mapUrl: '', image: '' }
+        ],
+        expenses: [
+          { id: '1', category: '飲食', name: '敘敘苑燒肉', amount: 12000, payMethod: '信用卡', date: '2026-09-06', image: '' }
+        ]
+      }];
+
+      const projects = ref(getDefaultProjects());
       const currentProjectId = ref(null);
       const showProjectModal = ref(false);
       const isEditingProject = ref(false);
       const editingProjectId = ref(null);
       const newProjectForm = ref({ title: '', dateRange: '', description: '' });
 
+      let unsubscribeSnapshot = null;
+      let isRemoteUpdating = false;
+
+      // 進入特定專案時，啟動該專案房間的即時同步監聽
+      const bindProjectSync = (projectId) => {
+        const fb = window.firebaseApp;
+        if (!fb) return;
+
+        // 取消先前的監聽
+        if (unsubscribeSnapshot) {
+          unsubscribeSnapshot();
+          unsubscribeSnapshot = null;
+        }
+
+        const docRef = fb.doc(fb.db, "shared_trips", projectId);
+
+        // 建立即時監聽
+        unsubscribeSnapshot = fb.onSnapshot(docRef, async (docSnap) => {
+          if (docSnap.exists()) {
+            const remoteProj = docSnap.data();
+            if (remoteProj) {
+              isRemoteUpdating = true;
+              const idx = projects.value.findIndex(p => p.id === projectId);
+              if (idx !== -1) {
+                projects.value[idx] = remoteProj;
+              } else {
+                projects.value.push(remoteProj);
+              }
+              setTimeout(() => { isRemoteUpdating = false; }, 300);
+            }
+          } else {
+            // 若雲端房間尚無資料，將目前的專案資料寫入雲端初始化
+            const currentProj = projects.value.find(p => p.id === projectId);
+            if (currentProj) {
+              try {
+                await fb.setDoc(docRef, currentProj);
+              } catch (e) {
+                console.error("初始化房間失敗: ", e);
+              }
+            }
+          }
+        });
+      };
+
+      // 將當前專案同步至雲端房間
+      const saveCurrentProjectToFirestore = async () => {
+        if (isRemoteUpdating || !currentProjectId.value) return;
+        const fb = window.firebaseApp;
+        if (!fb) return;
+
+        const currentProj = projects.value.find(p => p.id === currentProjectId.value);
+        if (!currentProj) return;
+
+        isSaving.value = true;
+        try {
+          const docRef = fb.doc(fb.db, "shared_trips", currentProjectId.value);
+          await fb.setDoc(docRef, JSON.parse(JSON.stringify(currentProj)), { merge: true });
+        } catch (e) {
+          console.error("即時同步失敗: ", e);
+        } finally {
+          setTimeout(() => { isSaving.value = false; }, 500);
+        }
+      };
+
+      // 監聽當前選定專案的資料變化，自動同步給所有協作者
+      watch(projects, () => {
+        if (isAuthenticated.value && currentProjectId.value) {
+          saveCurrentProjectToFirestore();
+        }
+      }, { deep: true });
+
       // 從日期字串中萃取出結束日期 (用於排序與判斷是否已結束)
       const parseProjectEndDate = (dateRangeStr) => {
-        if (!dateRangeStr) return new Date(9999, 0, 1); // 沒有日期的排在後面或視為進行中
-        // 嘗試找出所有日期格式，如 YYYY/MM/DD 或 M/D
+        if (!dateRangeStr) return new Date(9999, 0, 1);
         const matches = dateRangeStr.match(/(\d{1,4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})|(\d{1,2})[\/\.-](\d{1,2})/g);
         if (matches && matches.length > 0) {
-          const lastMatch = matches[matches.length - 1]; // 取區間最後一個日期作為結束日
+          const lastMatch = matches[matches.length - 1];
           const parts = lastMatch.split(/[\/\.-]/);
           const nowYear = new Date().getFullYear();
           if (parts.length === 3) {
@@ -1057,7 +1202,6 @@
         return new Date(9999, 0, 1);
       };
 
-      // 取得專案開始日期 (用於最近的排越上面)
       const parseProjectStartDate = (dateRangeStr) => {
         if (!dateRangeStr) return new Date(9999, 0, 1);
         const matches = dateRangeStr.match(/(\d{1,4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})|(\d{1,2})[\/\.-](\d{1,2})/g);
@@ -1074,7 +1218,6 @@
         return new Date(9999, 0, 1);
       };
 
-      // 進行中 / 即將出遊專案 (依離出遊日期最近排序)
       const activeProjects = computed(() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -1086,7 +1229,6 @@
         });
       });
 
-      // 已結束專案
       const endedProjects = computed(() => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
@@ -1094,7 +1236,7 @@
           const endDate = parseProjectEndDate(p.dateRange);
           return endDate < today && p.dateRange;
         }).sort((a, b) => {
-          return parseProjectEndDate(b.dateRange) - parseProjectEndDate(a.dateRange); // 最近結束的排越上面
+          return parseProjectEndDate(b.dateRange) - parseProjectEndDate(a.dateRange);
         });
       });
 
@@ -1144,73 +1286,71 @@
           projects.value.push(newProj);
           selectProject(newId);
         }
-        saveProjectsToStorage();
         showProjectModal.value = false;
       };
 
       const selectProject = (id) => {
         currentProjectId.value = id;
         selectedDayIndex.value = 0;
+        bindProjectSync(id);
+      };
+
+      const quitProject = () => {
+        if (unsubscribeSnapshot) {
+          unsubscribeSnapshot();
+          unsubscribeSnapshot = null;
+        }
+        currentProjectId.value = null;
+        showNavMenu.value = false;
       };
 
       const deleteProject = (id) => {
         if (confirm('確定要刪除這個行程專案嗎？')) {
           projects.value = projects.value.filter(p => p.id !== id);
-          saveProjectsToStorage();
           if (currentProjectId.value === id) {
-            currentProjectId.value = null;
+            quitProject();
           }
         }
       };
 
-      const saveProjectsToStorage = () => {
-        localStorage.setItem('trip_projects_list_v1', JSON.stringify(projects.value));
-      };
-
-      // 當前選中專案的對應資料 computed
       const currentProject = computed(() => {
         return projects.value.find(p => p.id === currentProjectId.value) || null;
       });
 
       const bannerUrl = computed({
         get: () => currentProject.value?.bannerUrl || '',
-        set: (val) => { if (currentProject.value) { currentProject.value.bannerUrl = val; saveProjectsToStorage(); } }
+        set: (val) => { if (currentProject.value) { currentProject.value.bannerUrl = val; } }
       });
 
       const days = computed({
         get: () => currentProject.value?.days || [],
-        set: (val) => { if (currentProject.value) { currentProject.value.days = val; saveProjectsToStorage(); } }
+        set: (val) => { if (currentProject.value) { currentProject.value.days = val; } }
       });
 
       const scheduleData = computed({
         get: () => currentProject.value?.scheduleData || {},
-        set: (val) => { if (currentProject.value) { currentProject.value.scheduleData = val; saveProjectsToStorage(); } }
+        set: (val) => { if (currentProject.value) { currentProject.value.scheduleData = val; } }
       });
 
       const prepCategories = computed({
         get: () => currentProject.value?.prepCategories || [],
-        set: (val) => { if (currentProject.value) { currentProject.value.prepCategories = val; saveProjectsToStorage(); } }
+        set: (val) => { if (currentProject.value) { currentProject.value.prepCategories = val; } }
       });
 
       const driveList = computed({
         get: () => currentProject.value?.driveList || [],
-        set: (val) => { if (currentProject.value) { currentProject.value.driveList = val; saveProjectsToStorage(); } }
+        set: (val) => { if (currentProject.value) { currentProject.value.driveList = val; } }
       });
 
       const shoppingList = computed({
         get: () => currentProject.value?.shoppingList || [],
-        set: (val) => { if (currentProject.value) { currentProject.value.shoppingList = val; saveProjectsToStorage(); } }
+        set: (val) => { if (currentProject.value) { currentProject.value.shoppingList = val; } }
       });
 
       const expenses = computed({
         get: () => currentProject.value?.expenses || [],
-        set: (val) => { if (currentProject.value) { currentProject.value.expenses = val; saveProjectsToStorage(); } }
+        set: (val) => { if (currentProject.value) { currentProject.value.expenses = val; } }
       });
-
-      // 自動同步儲存監聽
-      watch(projects, () => {
-        saveProjectsToStorage();
-      }, { deep: true });
 
       const currentTab = ref('itinerary');
       const showNavMenu = ref(false);
@@ -1230,7 +1370,6 @@
         showAddMenu.value = false;
       };
 
-      // 桌面端 Drag&Drop
       const draggedIndex = ref(null);
       
       const onDragStart = (index, e) => {
@@ -1256,7 +1395,6 @@
         draggedIndex.value = null;
       };
 
-      // 移動端 Touch 觸控過濾與平滑拖拽邏輯
       const touchStartIndex = ref(null);
       let touchStartY = 0;
       let lastSwappedY = 0;
@@ -1471,170 +1609,223 @@
       };
 
       const speakJapanese = (text) => {
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.lang = 'ja-JP';
-          utterance.rate = 0.9;
-          window.speechSynthesis.speak(utterance);
-        } else {
-          alert('您的瀏覽器不支援語音播放功能');
+        if (!('speechSynthesis' in window)) {
+          alert('您的瀏覽器不支援語音朗讀功能');
+          return;
         }
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'ja-JP';
+        utterance.rate = 0.9;
+        window.speechSynthesis.speak(utterance);
       };
 
       const addNewDay = () => {
-        const input = prompt(`請輸入 Day ${days.value.length + 1} 的日期與星期：`, `9/${6 + days.value.length} (日)`);
-        if (input) {
-          days.value.push({ dateDisplay: input });
-          selectedDayIndex.value = days.value.length - 1;
+        const nextDayNum = days.value.length + 1;
+        days.value.push({ dateDisplay: `Day ${nextDayNum}` });
+        if (!scheduleData.value[days.value.length - 1]) {
+          scheduleData.value[days.value.length - 1] = [];
+        }
+      };
+
+      const deleteCurrentDay = () => {
+        if (days.value.length <= 1) return;
+        if (confirm(`確定要刪除 Day ${selectedDayIndex.value + 1} 嗎？`)) {
+          days.value.splice(selectedDayIndex.value, 1);
+          const newSch = {};
+          let newIdx = 0;
+          days.value.forEach((_, oldIdx) => {
+            if (oldIdx !== selectedDayIndex.value) {
+              newSch[newIdx] = scheduleData.value[oldIdx] || [];
+              newIdx++;
+            }
+          });
+          scheduleData.value = newSch;
+          selectedDayIndex.value = Math.max(0, selectedDayIndex.value - 1);
         }
       };
 
       const openDateModal = () => {
-        const now = new Date();
-        const year = now.getFullYear();
-        dateInputVal.value = `${year}-09-06`;
+        dateInputVal.value = '';
         showDateModal.value = true;
       };
 
       const saveDayDate = () => {
-        if (!dateInputVal.value) return;
-        const parts = dateInputVal.value.split('-');
-        if (parts.length === 3) {
-          const m = parseInt(parts[1], 10);
-          const d = parseInt(parts[2], 10);
-          const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-          const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-          const wk = weekdays[dateObj.getDay()];
-          if (days.value[selectedDayIndex.value]) {
-            days.value[selectedDayIndex.value].dateDisplay = `${m}/${d} (${wk})`;
+        if (dateInputVal.value) {
+          const parts = dateInputVal.value.split('-');
+          if (parts.length === 3) {
+            const m = parseInt(parts[1], 10);
+            const d = parseInt(parts[2], 10);
+            const dateObj = new Date(parseInt(parts[0], 10), m - 1, d);
+            const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+            const wStr = weekdays[dateObj.getDay()];
+            days.value[selectedDayIndex.value].dateDisplay = `${m}/${d} (${wStr})`;
+            days.value = [...days.value];
           }
         }
         showDateModal.value = false;
       };
 
-      const deleteCurrentDay = () => {
-        if (confirm(`確定要刪除 Day ${selectedDayIndex.value + 1} 的整天行程嗎？`)) {
-          days.value.splice(selectedDayIndex.value, 1);
-          const sch = { ...scheduleData.value };
-          delete sch[selectedDayIndex.value];
-          scheduleData.value = sch;
-          selectedDayIndex.value = Math.max(0, selectedDayIndex.value - 1);
-        }
-      };
-
-      const uploadBanner = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (evt) => bannerUrl.value = evt.target.result;
-          reader.readAsDataURL(file);
-        }
-      };
-
-      const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = (evt) => formData.value.image = evt.target.result;
-          reader.readAsDataURL(file);
-        }
-      };
-
-      const selectAddType = (type) => {
+      const selectAddType = (typeOrCat) => {
         showAddMenu.value = false;
-        openAddModal(type);
+        isEditing.value = false;
+        if (currentTab.value === 'itinerary') {
+          formData.value = {
+            id: Date.now().toString(),
+            category: typeOrCat,
+            time: '10:00',
+            name: '',
+            mapUrl: '',
+            ticket: '',
+            note: '',
+            flightNo: '',
+            depAirport: '',
+            depCn: '',
+            arrAirport: '',
+            arrCn: '',
+            depTime: '',
+            arrTime: ''
+          };
+        } else if (currentTab.value === 'drive') {
+          formData.value = {
+            id: Date.now().toString(),
+            type: typeOrCat,
+            company: '',
+            carModel: '',
+            reservationNo: '',
+            mapCode: '',
+            pickupStore: '',
+            pickupTime: '',
+            returnStore: '',
+            returnTime: '',
+            phone: '',
+            mapUrl: '',
+            stationName: '',
+            gasType: '',
+            note: '',
+            parkingName: '',
+            feeNote: '',
+            route: '',
+            amount: 0
+          };
+        }
+        showModal.value = true;
       };
 
-      const openAddModal = (type = null) => {
+      const openAddModal = () => {
         isEditing.value = false;
-        if (currentTab.value === 'itinerary') formData.value = { category: type || '景點', time: '10:00' };
-        else if (currentTab.value === 'drive') formData.value = { type: type || '租車' };
-        else if (currentTab.value === 'expense') formData.value = { category: '飲食', payMethod: '現金' };
-        else formData.value = {};
+        if (currentTab.value === 'shopping') {
+          formData.value = { id: Date.now().toString(), name: '', price: '', location: '', mapUrl: '', image: '' };
+        } else if (currentTab.value === 'expense') {
+          formData.value = { id: Date.now().toString(), category: '飲食', name: '', amount: '', payMethod: '現金', date: new Date().toISOString().split('T')[0], image: '' };
+        }
         showModal.value = true;
       };
 
       const openEditModal = (item) => {
         isEditing.value = true;
-        formData.value = { ...item };
+        formData.value = JSON.parse(JSON.stringify(item));
         showModal.value = true;
+      };
+
+      const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          formData.value.image = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const uploadBanner = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          bannerUrl.value = event.target.result;
+        };
+        reader.readAsDataURL(file);
       };
 
       const saveData = () => {
         if (currentTab.value === 'itinerary') {
-          const sch = { ...scheduleData.value };
-          if (!sch[selectedDayIndex.value]) sch[selectedDayIndex.value] = [];
-          if (isEditing.value) {
-            const idx = sch[selectedDayIndex.value].findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) sch[selectedDayIndex.value][idx] = { ...formData.value };
-          } else {
-            sch[selectedDayIndex.value].push({ ...formData.value, id: Date.now().toString() });
+          if (!scheduleData.value[selectedDayIndex.value]) {
+            scheduleData.value[selectedDayIndex.value] = [];
           }
-          scheduleData.value = sch;
+          if (isEditing.value) {
+            const list = scheduleData.value[selectedDayIndex.value];
+            const idx = list.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) list[idx] = formData.value;
+          } else {
+            scheduleData.value[selectedDayIndex.value].push(formData.value);
+          }
+          scheduleData.value = { ...scheduleData.value };
         } else if (currentTab.value === 'drive') {
-          const list = [...driveList.value];
           if (isEditing.value) {
-            const idx = list.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) list[idx] = { ...formData.value };
+            const idx = driveList.value.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) driveList.value[idx] = formData.value;
           } else {
-            list.push({ ...formData.value, id: Date.now().toString() });
+            driveList.value.push(formData.value);
           }
-          driveList.value = list;
+          driveList.value = [...driveList.value];
         } else if (currentTab.value === 'shopping') {
-          const list = [...shoppingList.value];
           if (isEditing.value) {
-            const idx = list.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) list[idx] = { ...formData.value };
+            const idx = shoppingList.value.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) shoppingList.value[idx] = formData.value;
           } else {
-            list.push({ ...formData.value, id: Date.now().toString() });
+            shoppingList.value.push(formData.value);
           }
-          shoppingList.value = list;
+          shoppingList.value = [...shoppingList.value];
         } else if (currentTab.value === 'expense') {
-          const list = [...expenses.value];
           if (isEditing.value) {
-            const idx = list.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) list[idx] = { ...formData.value };
+            const idx = expenses.value.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) expenses.value[idx] = formData.value;
           } else {
-            list.push({ ...formData.value, id: Date.now().toString(), date: new Date().toISOString().split('T')[0] });
+            expenses.value.push(formData.value);
           }
-          expenses.value = list;
+          expenses.value = [...expenses.value];
         }
         showModal.value = false;
       };
 
       const confirmDelete = () => {
-        if (confirm('確定要刪除這筆資料嗎？')) {
-          if (currentTab.value === 'itinerary') {
-            const sch = { ...scheduleData.value };
-            sch[selectedDayIndex.value] = sch[selectedDayIndex.value].filter(i => i.id !== formData.value.id);
-            scheduleData.value = sch;
-          } else if (currentTab.value === 'drive') {
-            driveList.value = driveList.value.filter(i => i.id !== formData.value.id);
-          } else if (currentTab.value === 'shopping') {
-            shoppingList.value = shoppingList.value.filter(i => i.id !== formData.value.id);
-          } else if (currentTab.value === 'expense') {
-            expenses.value = expenses.value.filter(i => i.id !== formData.value.id);
+        if (!confirm('確定要刪除這個項目嗎？')) return;
+        if (currentTab.value === 'itinerary') {
+          const list = scheduleData.value[selectedDayIndex.value];
+          if (list) {
+            scheduleData.value[selectedDayIndex.value] = list.filter(i => i.id !== formData.value.id);
+            scheduleData.value = { ...scheduleData.value };
           }
-          showModal.value = false;
+        } else if (currentTab.value === 'drive') {
+          driveList.value = driveList.value.filter(i => i.id !== formData.value.id);
+        } else if (currentTab.value === 'shopping') {
+          shoppingList.value = shoppingList.value.filter(i => i.id !== formData.value.id);
+        } else if (currentTab.value === 'expense') {
+          expenses.value = expenses.value.filter(i => i.id !== formData.value.id);
         }
+        showModal.value = false;
       };
 
       return {
         isAuthenticated, passwordInput, passwordError, checkPassword,
-        projects, activeProjects, endedProjects, currentProjectId, showProjectModal, isEditingProject, newProjectForm, 
-        openNewProjectModal, openEditProjectModal, saveProject, selectProject, deleteProject,
-        currentTab, showNavMenu, showAddMenu, switchTab, bannerUrl, selectedDayIndex, days,
-        scheduleData, currentDaySchedule, driveList, shoppingList, expenses, totalExpense, japanesePhrases,
-        prepCategories, expandedPrepCategories, togglePrepCategory, getCompletedPrepCount, deletePrepCategory, deletePrepItem,
-        prepIcons, showPrepCatModal, editingPrepCatId, prepCatForm, openPrepCategoryModal, savePrepCategory, openAddPrepItemModal,
-        draggedIndex, onDragStart, onDragOver, onDrop, onDragEnd, onTouchStart, onTouchMove, onTouchEnd,
-        selectedJpCategory, showModal, showDateModal, dateInputVal, isEditing, formData, previewImageSrc, largeJapaneseItem, uploadBanner, handleImageUpload,
-        openMap, callPhone, previewImg, showLargeJapanese, speakJapanese, selectAddType, openAddModal, openEditModal, saveData, confirmDelete,
-        addNewDay, openDateModal, saveDayDate, deleteCurrentDay
+        loginWithGoogle, loginAnonymouslyUser, logoutFirebase, userEmail, isSaving,
+        projects, currentProjectId, activeProjects, endedProjects,
+        openNewProjectModal, openEditProjectModal, saveProject, selectProject, quitProject, deleteProject,
+        currentProject, bannerUrl, days, scheduleData, prepCategories, driveList, shoppingList, expenses,
+        currentTab, showNavMenu, showAddMenu, selectedDayIndex, showModal, showDateModal, dateInputVal,
+        isEditing, previewImageSrc, largeJapaneseItem, selectedJpCategory,
+        switchTab, draggedIndex, onDragStart, onDragOver, onDrop, onDragEnd,
+        onTouchStart, onTouchMove, onTouchEnd, prepIcons, showPrepCatModal, editingPrepCatId, prepCatForm,
+        openPrepCategoryModal, savePrepCategory, expandedPrepCategories, japanesePhrases, formData,
+        currentDaySchedule, totalExpense, togglePrepCategory, getCompletedPrepCount, openAddPrepItemModal,
+        deletePrepCategory, deletePrepItem, openMap, callPhone, previewImg, showLargeJapanese, speakJapanese,
+        addNewDay, deleteCurrentDay, openDateModal, saveDayDate, selectAddType, openAddModal, openEditModal,
+        handleImageUpload, uploadBanner, saveData, confirmDelete
       };
     }
   }).mount('#app');
 </script>
+
 </body>
 </html>
