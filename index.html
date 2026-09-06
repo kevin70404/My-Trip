@@ -72,7 +72,6 @@
       -ms-user-select: none;
       user-select: none;
       -webkit-touch-callout: none;
-      touch-action: pan-y;
     }
   </style>
 </head>
@@ -258,7 +257,7 @@
                @dragover.prevent
                @drop="onDrop(index)"
                :class="{ 'dragging': draggedIndex === index }"
-               class="prep-card bg-white rounded-2xl border border-beigetone-200 shadow-sm overflow-hidden transition-transform duration-150 touch-none-select">
+               class="prep-card bg-white rounded-2xl border border-beigetone-200 shadow-sm overflow-hidden transition-all duration-200 touch-none-select">
             
             <!-- 類別圖卡 header -->
             <div @click="togglePrepCategory(cat.id)" class="p-4 bg-beigetone-50 flex items-center justify-between cursor-pointer hover:bg-beigetone-100/60 transition">
@@ -913,7 +912,7 @@
         ]
       }));
 
-      // 行前準備資料 (擴充 icon 欄位)
+      // 行前準備資料
       const prepCategories = ref(loadSavedData('trip_prep_categories_v2', [
         {
           id: '1',
@@ -936,7 +935,7 @@
         }
       ]));
 
-      // 桌面與移動端拖拉排序邏輯
+      // 桌面端 Drag&Drop
       const draggedIndex = ref(null);
       const onDragStart = (index) => {
         draggedIndex.value = index;
@@ -949,15 +948,25 @@
         draggedIndex.value = null;
       };
 
-      // 移動端 Touch 觸控事件專用邏輯
+      // 移動端 Touch 觸控過濾與平滑拖拽邏輯
       const touchStartIndex = ref(null);
+      let touchStartY = 0;
+      let lastSwappedY = 0;
+
       const onTouchStart = (index, e) => {
         touchStartIndex.value = index;
         draggedIndex.value = index;
+        touchStartY = e.touches[0].clientY;
+        lastSwappedY = touchStartY;
       };
 
       const onTouchMove = (e) => {
         if (touchStartIndex.value === null) return;
+        
+        const currentY = e.touches[0].clientY;
+        // 加入距離門檻 (至少要移動超過 25px 才做交換計算)，減緩靈敏度
+        if (Math.abs(currentY - lastSwappedY) < 25) return;
+
         const touch = e.touches[0];
         const targetEl = document.elementFromPoint(touch.clientX, touch.clientY);
         if (!targetEl) return;
@@ -970,6 +979,7 @@
             prepCategories.value.splice(targetIndex, 0, item);
             touchStartIndex.value = targetIndex;
             draggedIndex.value = targetIndex;
+            lastSwappedY = currentY;
           }
         }
       };
@@ -1161,7 +1171,6 @@
         }
       };
 
-      // 刪除個別項目時新增確認跳窗
       const deletePrepItem = (catId, itemId, itemName) => {
         if (confirm(`確定要刪除項目「${itemName || '此項目'}」嗎？`)) {
           const cat = prepCategories.value.find(c => c.id === catId);
