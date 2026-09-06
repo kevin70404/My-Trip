@@ -88,7 +88,7 @@
       </div>
       <div>
         <h2 class="text-xl font-bold text-beigetone-900 mb-1">行程系統登入</h2>
-        <p class="text-xs text-beigetone-400">請選擇您的身分進入檢視或管理行程[cite: 9]</p>
+        <p class="text-xs text-beigetone-400">請選擇您的身分進入檢視或管理行程</p>
       </div>
       
       <!-- 主機登入表單 -->
@@ -160,12 +160,12 @@
     <div class="p-6 space-y-6">
       <div class="bg-white p-5 rounded-3xl shadow-sm border border-beigetone-200">
         <h1 class="text-lg font-bold text-beigetone-900">我的旅程專案</h1>
-        <p class="text-xs text-beigetone-400 mt-0.5">{{ isHost ? '選擇一個專案進入編輯，或建立新旅程' : '選擇一個專案以檢視詳細行程內容' }}[cite: 9]</p>
+        <p class="text-xs text-beigetone-400 mt-0.5">{{ isHost ? '選擇一個專案進入編輯，或建立新旅程' : '選擇一個專案以檢視詳細行程內容' }}</p>
       </div>
 
       <!-- 進行中 / 即將到來專案列表 -->
       <div class="space-y-3">
-        <h3 class="text-xs font-bold text-beigetone-800 tracking-wider px-1">進行中 / 即將出遊</h3>[cite: 9]
+        <h3 class="text-xs font-bold text-beigetone-800 tracking-wider px-1">進行中 / 即將出遊</h3>
         <div v-for="proj in activeProjects" :key="proj.id" 
              @click="selectProject(proj.id)"
              class="bg-white rounded-3xl p-4 shadow-sm border border-beigetone-200 hover:border-beigetone-800 transition cursor-pointer flex items-center gap-4 group relative overflow-hidden">
@@ -176,8 +176,8 @@
 
           <div class="flex-1 min-w-0 pr-12">
             <h3 class="font-bold text-base text-beigetone-900 truncate group-hover:text-beigetone-800 transition">{{ proj.title }}</h3>
-            <p class="text-xs text-accent-terracotta font-medium mt-0.5">{{ proj.dateRange || '未設定日期' }}[cite: 9]</p>
-            <p class="text-[11px] text-beigetone-400 mt-1 truncate">{{ proj.description || '點擊進入詳細行程' }}[cite: 9]</p>
+            <p class="text-xs text-accent-terracotta font-medium mt-0.5">{{ proj.dateRange || '未設定日期' }}</p>
+            <p class="text-[11px] text-beigetone-400 mt-1 truncate">{{ proj.description || '點擊進入詳細行程' }}</p>
           </div>
 
           <div v-if="isHost" class="absolute top-3 right-3 flex items-center gap-1">
@@ -191,7 +191,7 @@
         </div>
 
         <div v-if="activeProjects.length === 0" class="text-center py-8 text-xs text-beigetone-400 bg-white/50 rounded-2xl border border-dashed border-beigetone-200">
-          目前沒有進行中的行程專案[cite: 9]
+          目前沒有進行中的行程專案
         </div>
       </div>
 
@@ -211,8 +211,8 @@
               <span class="text-[10px] bg-beigetone-200 text-beigetone-800 px-1.5 py-0.5 rounded font-bold">已結束</span>
               <h3 class="font-bold text-base text-beigetone-900 truncate">{{ proj.title }}</h3>
             </div>
-            <p class="text-xs text-beigetone-400 font-medium mt-0.5">{{ proj.dateRange || '未設定日期' }}[cite: 9]</p>
-            <p class="text-[11px] text-beigetone-400 mt-1 truncate">{{ proj.description || '點擊檢視歷史行程' }}[cite: 9]</p>
+            <p class="text-xs text-beigetone-400 font-medium mt-0.5">{{ proj.dateRange || '未設定日期' }}</p>
+            <p class="text-[11px] text-beigetone-400 mt-1 truncate">{{ proj.description || '點擊檢視歷史行程' }}</p>
           </div>
 
           <div v-if="isHost" class="absolute top-3 right-3 flex items-center gap-1">
@@ -227,7 +227,7 @@
       </div>
     </div>
 
-    <!-- 右下角浮動新增專案按鈕 (+) - 僅主機能見[cite: 9] -->
+    <!-- 右下角浮動新增專案按鈕 (+) - 僅主機能見 -->
     <div v-if="isHost" class="fixed bottom-6 right-6 z-40">
       <button @click="openNewProjectModal" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition hover:bg-beigetone-900" title="新增專案">
         <i class="fa-solid fa-plus"></i>
@@ -238,7 +238,7 @@
     <div v-if="showProjectModal && isHost" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-sm rounded-[28px] p-6 space-y-4 shadow-2xl">
         <div class="flex justify-between items-center">
-          <h3 class="font-bold text-lg text-beigetone-900">{{ isEditingProject ? '編輯行程專案' : '建立新行程專案' }}</h3>[cite: 9]
+          <h3 class="font-bold text-lg text-beigetone-900">{{ isEditingProject ? '編輯行程專案' : '建立新行程專案' }}</h3>
           <button @click="showProjectModal = false" class="text-beigetone-400 hover:text-beigetone-800"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
 
@@ -269,9 +269,9 @@
   <template v-else-if="isAuthenticated && currentProjectId">
     <!-- 頁首 Banner -->
     <div class="relative w-full h-[220px] bg-beigetone-300 overflow-hidden">
-      <img :src="bannerUrl" class="w-full h-full object-cover object-center" alt="旅遊 Banner">[cite: 9]
+      <img :src="bannerUrl" class="w-full h-full object-cover object-center" alt="旅遊 Banner">
       
-      <!-- 更換封面 (僅主機)[cite: 9] -->
+      <!-- 更換封面 (僅主機) -->
       <label v-if="isHost" class="absolute top-4 left-4 bg-white/70 backdrop-blur-md px-3 py-1.5 rounded-full text-xs text-beigetone-800 shadow cursor-pointer hover:bg-white transition">
         <i class="fa-solid fa-camera mr-1"></i> 更換封面
         <input type="file" @change="uploadBanner" class="hidden" accept="image/*">
@@ -294,7 +294,7 @@
             </span>
           </button>
           
-          <!-- 新增天數 (僅主機)[cite: 9] -->
+          <!-- 新增天數 (僅主機) -->
           <button v-if="isHost" @click="addNewDay" class="flex-shrink-0 w-12 h-14 bg-white text-beigetone-800 border border-dashed border-beigetone-400 rounded-2xl flex items-center justify-center hover:bg-beigetone-100 transition">
             <i class="fa-solid fa-plus text-lg"></i>
           </button>
@@ -305,7 +305,7 @@
             <i class="fa-solid fa-calendar-day mr-1.5 text-accent-terracotta"></i>Day {{ selectedDayIndex + 1 }} - {{ days[selectedDayIndex]?.dateDisplay }}
           </span>
           
-          <!-- 日期修改/刪除 (僅主機)[cite: 9] -->
+          <!-- 日期修改/刪除 (僅主機) -->
           <div v-if="isHost" class="flex items-center gap-1.5">
             <button @click="openDateModal" class="text-xs px-2.5 py-1 bg-beigetone-100 text-beigetone-800 rounded-full font-medium hover:bg-beigetone-200 transition">
               <i class="fa-solid fa-pen mr-1"></i>修改日期
@@ -319,7 +319,7 @@
         <div class="relative border-l-2 border-beigetone-300 ml-2 pl-0 space-y-6 my-2">
           
           <div v-if="currentDaySchedule.length === 0" class="text-center py-8 text-xs text-beigetone-400 pl-4">
-            尚無行程，{{ isHost ? '點選右下角「+」開始新增吧！' : '目前主機尚未新增行程內容。' }}[cite: 9]
+            尚無行程，{{ isHost ? '點選右下角「+」開始新增吧！' : '目前主機尚未新增行程內容。' }}
           </div>
 
           <div v-for="(item, idx) in currentDaySchedule" :key="item.id" class="relative group pl-5 flex flex-col items-start">
@@ -334,7 +334,7 @@
                   <div class="flex items-center gap-2">
                     <span class="text-[11px] bg-accent-terracotta text-white px-2 py-0.5 rounded-md font-bold">航班資訊</span>
                   </div>
-                  <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-400 hover:text-beigetone-900 p-1">[cite: 9]
+                  <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-400 hover:text-beigetone-900 p-1">
                     <i class="fa-solid fa-pen-to-square text-sm"></i>
                   </button>
                 </div>
@@ -387,7 +387,7 @@
                   </div>
                 </div>
 
-                <button v-if="isHost" @click="openEditModal(item)" class="absolute bottom-3 right-3 text-beigetone-300 hover:text-beigetone-800 p-1">[cite: 9]
+                <button v-if="isHost" @click="openEditModal(item)" class="absolute bottom-3 right-3 text-beigetone-300 hover:text-beigetone-800 p-1">
                   <i class="fa-solid fa-pen-to-square"></i>
                 </button>
               </div>
@@ -401,7 +401,7 @@
       <div v-if="currentTab === 'preparation'" class="space-y-4">
         <div class="bg-beigetone-800 text-white rounded-2xl p-4 shadow-sm">
           <h3 class="font-bold text-base">行李與行前準備</h3>
-          <p class="text-xs text-beigetone-300 mt-0.5">{{ isHost ? '可按住握把圖示拖拉調整順序' : '檢視行前準備與行李清單' }}[cite: 9]</p>
+          <p class="text-xs text-beigetone-300 mt-0.5">{{ isHost ? '可按住握把圖示拖拉調整順序' : '檢視行前準備與行李清單' }}</p>
         </div>
 
         <div v-if="prepCategories.length === 0" class="text-center py-12 text-xs text-beigetone-400">
@@ -416,7 +416,7 @@
             
             <div @click="togglePrepCategory(cat.id)" class="p-4 bg-beigetone-50 flex items-center justify-between cursor-pointer hover:bg-beigetone-100/60 transition gap-2">
               <div class="flex items-center gap-2 min-w-0 flex-1">
-                <i v-if="isHost" class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing p-1.5 touch-none touch-none-select flex-shrink-0"[cite: 9]
+                <i v-if="isHost" class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing p-1.5 touch-none touch-none-select flex-shrink-0"
                    draggable="true"
                    @dragstart="onDragStart(index, $event)"
                    @dragover.prevent="onDragOver(index, $event)"
@@ -434,7 +434,7 @@
               
               <div class="flex items-center gap-1.5 flex-shrink-0">
                 <template v-if="isHost">
-                  <button @click.stop.prevent="openPrepCategoryModal(cat)" class="text-beigetone-400 hover:text-beigetone-800 p-1 text-xs" title="編輯類別">[cite: 9]
+                  <button @click.stop.prevent="openPrepCategoryModal(cat)" class="text-beigetone-400 hover:text-beigetone-800 p-1 text-xs" title="編輯類別">
                     <i class="fa-solid fa-pen"></i>
                   </button>
                   <button @click.stop.prevent="openAddPrepItemModal(cat)" class="text-xs bg-beigetone-200/80 text-beigetone-800 px-2.5 py-1 rounded-lg font-medium hover:bg-beigetone-300 transition whitespace-nowrap">
@@ -455,13 +455,13 @@
 
               <div v-for="item in cat.items" :key="item.id" class="flex items-center justify-between group">
                 <label class="flex items-center gap-2.5 cursor-pointer flex-1">
-                  <!-- 訪客唯讀狀態下禁用勾選變更，若為主機可同步[cite: 9] -->
+                  <!-- 訪客唯讀狀態下禁用勾選變更，若為主機可同步 -->
                   <input type="checkbox" v-model="item.completed" :disabled="!isHost" @change="onHostAction" class="w-4 h-4 rounded text-beigetone-800 focus:ring-beigetone-800 border-beigetone-300 disabled:opacity-50">
                   <span :class="item.completed ? 'line-through text-beigetone-300' : 'text-beigetone-800'" class="text-xs font-medium break-all">
                     {{ item.name }}
                   </span>
                 </label>
-                <button v-if="isHost" @click="deletePrepItem(cat.id, item.id, item.name)" class="text-beigetone-300 hover:text-red-500 text-xs p-1" title="刪除項目">[cite: 9]
+                <button v-if="isHost" @click="deletePrepItem(cat.id, item.id, item.name)" class="text-beigetone-300 hover:text-red-500 text-xs p-1" title="刪除項目">
                   <i class="fa-solid fa-xmark"></i>
                 </button>
               </div>
@@ -556,7 +556,7 @@
               </div>
             </div>
 
-            <button v-if="isHost" @click="openEditModal(item)" class="absolute top-2 right-2 bg-black/40 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs backdrop-blur-xs hover:bg-black/60 transition z-10">[cite: 9]
+            <button v-if="isHost" @click="openEditModal(item)" class="absolute top-2 right-2 bg-black/40 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs backdrop-blur-xs hover:bg-black/60 transition z-10">
               <i class="fa-solid fa-pen text-[10px]"></i>
             </button>
           </div>
@@ -596,7 +596,7 @@
                 <div class="font-bold text-beigetone-900 font-maru">¥ {{ Number(exp.amount).toLocaleString() }}</div>
                 <div class="text-[10px] text-beigetone-400">{{ exp.date }}</div>
               </div>
-              <button v-if="isHost" @click="openEditModal(exp)" class="text-beigetone-300 hover:text-beigetone-800 p-1.5">[cite: 9]
+              <button v-if="isHost" @click="openEditModal(exp)" class="text-beigetone-300 hover:text-beigetone-800 p-1.5">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
@@ -612,7 +612,7 @@
               <span class="text-xs bg-beigetone-800 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-car-side"></i> 租車預約
               </span>
-              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">[cite: 9]
+              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
@@ -659,7 +659,7 @@
               <span class="text-xs bg-red-600 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-gas-pump"></i> 加油資訊
               </span>
-              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">[cite: 9]
+              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
@@ -690,7 +690,7 @@
               <span class="text-xs bg-blue-600 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-square-parking"></i> 停車場備註
               </span>
-              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">[cite: 9]
+              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
@@ -717,7 +717,7 @@
               <span class="text-xs bg-emerald-700 text-white px-2.5 py-0.5 rounded-md font-bold flex items-center gap-1">
                 <i class="fa-solid fa-road"></i> 高速公路過路費 / ETC
               </span>
-              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">[cite: 9]
+              <button v-if="isHost" @click="openEditModal(item)" class="text-beigetone-300 hover:text-beigetone-800 p-1">
                 <i class="fa-solid fa-pen text-xs"></i>
               </button>
             </div>
@@ -779,7 +779,7 @@
       </button>
     </div>
 
-    <!-- ================= 右下角浮動新增選單 (+) - 僅主機能見[cite: 9] ================= -->
+    <!-- ================= 右下角浮動新增選單 (+) - 僅主機能見 ================= -->
     <template v-if="isHost">
       <div v-if="currentTab === 'itinerary' || currentTab === 'drive'" class="fixed bottom-6 right-6 z-40">
         <div v-if="showAddMenu" @click="showAddMenu = false" class="fixed inset-0 bg-black/20 backdrop-blur-xs z-30"></div>
@@ -819,10 +819,10 @@
     </template>
 
     <!-- 行前準備類別編輯/新增 Modal -->
-    <div v-if="showPrepCatModal && isHost" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">[cite: 9]
+    <div v-if="showPrepCatModal && isHost" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-sm rounded-[28px] p-6 space-y-4 shadow-2xl">
         <div class="flex justify-between items-center">
-          <h3 class="font-bold text-lg text-beigetone-900">{{ editingPrepCatId ? '編輯準備類別' : '新增準備類別' }}</h3>[cite: 9]
+          <h3 class="font-bold text-lg text-beigetone-900">{{ editingPrepCatId ? '編輯準備類別' : '新增準備類別' }}</h3>
           <button @click="showPrepCatModal = false" class="text-beigetone-400 hover:text-beigetone-800"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
 
@@ -876,7 +876,7 @@
     </div>
 
     <!-- 修改日期彈窗 -->
-    <div v-if="showDateModal && isHost" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">[cite: 9]
+    <div v-if="showDateModal && isHost" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div class="bg-white w-full max-w-sm rounded-[28px] p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center">
           <h3 class="font-bold text-lg text-beigetone-900">修改 Day {{ selectedDayIndex + 1 }} 日期</h3>
@@ -898,10 +898,10 @@
     </div>
 
     <!-- 編輯 / 新增彈出視窗 -->
-    <div v-if="showModal && isHost" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end justify-center">[cite: 9]
+    <div v-if="showModal && isHost" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end justify-center">
       <div class="bg-white w-full max-w-md rounded-t-[28px] p-6 space-y-4 shadow-2xl max-h-[85vh] overflow-y-auto">
         <div class="flex justify-between items-center">
-          <h3 class="font-bold text-lg text-beigetone-900">{{ isEditing ? '編輯項目' : '新增項目' }}</h3>[cite: 9]
+          <h3 class="font-bold text-lg text-beigetone-900">{{ isEditing ? '編輯項目' : '新增項目' }}</h3>
           <button @click="showModal = false" class="text-beigetone-400 hover:text-beigetone-800"><i class="fa-solid fa-xmark text-xl"></i></button>
         </div>
 
@@ -1033,12 +1033,23 @@
     setup() {
       const HOST_PASSWORD = "0214";
       const isAuthenticated = ref(false);
-      const userRole = ref('visitor'); // 'host' 或 'visitor'[cite: 9]
+      const userRole = ref('visitor'); // 'host' 或 'visitor'
       const passwordInput = ref('');
       const passwordError = ref(false);
       const visitorPeerIdInput = ref('');
       
       const isHost = computed(() => userRole.value === 'host');
+
+      // PeerJS 配置：新增 Google STUN 伺服器設定以修復 NAT 穿透連線問題
+      const peerConfig = {
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' }
+          ]
+        }
+      };
 
       // PeerJS 相關變數
       const myPeerId = ref('');
@@ -1050,14 +1061,14 @@
 
       const initPeerAsHost = () => {
         try {
-          peer = new Peer();
+          peer = new Peer(peerConfig);
           peer.on('open', (id) => {
             myPeerId.value = id;
           });
           peer.on('connection', (connection) => {
             hostConnections.push(connection);
             syncConnected.value = true;
-            // 連線建立時立即傳送目前完整專案資料給新訪客
+            // 連線建立時點即傳送目前完整專案資料給新訪客
             connection.on('open', () => {
               connection.send({ type: 'SYNC_ALL', projects: projects.value });
             });
@@ -1074,7 +1085,7 @@
       const connectAsVisitorToHost = (hostId) => {
         if (!hostId) return;
         try {
-          peer = new Peer();
+          peer = new Peer(peerConfig);
           peer.on('open', () => {
             conn = peer.connect(hostId.trim());
             conn.on('open', () => {
@@ -1084,7 +1095,7 @@
             conn.on('data', (data) => {
               if (data && data.type === 'SYNC_ALL') {
                 projects.value = data.projects;
-                saveProjectsToStorage();
+                saveProjectsToStorage(false); // 避免訪客端觸發廣播
               }
             });
             conn.on('close', () => {
@@ -1146,7 +1157,7 @@
         syncConnected.value = false;
       };
 
-      // 專案多重管理系統[cite: 9]
+      // 專案多重管理系統
       const loadProjects = () => {
         try {
           const saved = localStorage.getItem('trip_projects_list_v1');
@@ -1256,7 +1267,7 @@
       });
 
       const openNewProjectModal = () => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         isEditingProject.value = false;
         editingProjectId.value = null;
         newProjectForm.value = { title: '', dateRange: '', description: '' };
@@ -1264,7 +1275,7 @@
       };
 
       const openEditProjectModal = (proj) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         isEditingProject.value = true;
         editingProjectId.value = proj.id;
         newProjectForm.value = { 
@@ -1276,7 +1287,7 @@
       };
 
       const saveProject = () => {
-        if (!isHost.value || !newProjectForm.value.title.trim()) return;[cite: 9]
+        if (!isHost.value || !newProjectForm.value.title.trim()) return;
 
         if (isEditingProject.value && editingProjectId.value) {
           const proj = projects.value.find(p => p.id === editingProjectId.value);
@@ -1313,7 +1324,7 @@
       };
 
       const deleteProject = (id) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         if (confirm('確定要刪除這個行程專案嗎？')) {
           projects.value = projects.value.filter(p => p.id !== id);
           saveProjectsToStorage();
@@ -1323,9 +1334,11 @@
         }
       };
 
-      const saveProjectsToStorage = () => {
+      const saveProjectsToStorage = (shouldBroadcast = true) => {
         localStorage.setItem('trip_projects_list_v1', JSON.stringify(projects.value));
-        broadcastData();
+        if (shouldBroadcast) {
+          broadcastData();
+        }
       };
 
       const onHostAction = () => {
@@ -1338,37 +1351,37 @@
 
       const bannerUrl = computed({
         get: () => currentProject.value?.bannerUrl || '',
-        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.bannerUrl = val; saveProjectsToStorage(); } }[cite: 9]
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.bannerUrl = val; saveProjectsToStorage(); } }
       });
 
       const days = computed({
         get: () => currentProject.value?.days || [],
-        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.days = val; saveProjectsToStorage(); } }[cite: 9]
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.days = val; saveProjectsToStorage(); } }
       });
 
       const scheduleData = computed({
         get: () => currentProject.value?.scheduleData || {},
-        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.scheduleData = val; saveProjectsToStorage(); } }[cite: 9]
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.scheduleData = val; saveProjectsToStorage(); } }
       });
 
       const prepCategories = computed({
         get: () => currentProject.value?.prepCategories || [],
-        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.prepCategories = val; saveProjectsToStorage(); } }[cite: 9]
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.prepCategories = val; saveProjectsToStorage(); } }
       });
 
       const driveList = computed({
         get: () => currentProject.value?.driveList || [],
-        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.driveList = val; saveProjectsToStorage(); } }[cite: 9]
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.driveList = val; saveProjectsToStorage(); } }
       });
 
       const shoppingList = computed({
         get: () => currentProject.value?.shoppingList || [],
-        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.shoppingList = val; saveProjectsToStorage(); } }[cite: 9]
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.shoppingList = val; saveProjectsToStorage(); } }
       });
 
       const expenses = computed({
         get: () => currentProject.value?.expenses || [],
-        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.expenses = val; saveProjectsToStorage(); } }[cite: 9]
+        set: (val) => { if (isHost.value && currentProject.value) { currentProject.value.expenses = val; saveProjectsToStorage(); } }
       });
 
       const currentTab = ref('itinerary');
@@ -1390,9 +1403,9 @@
       };
 
       const draggedIndex = ref(null);
-      const onDragStart = (index, e) => { if (!isHost.value) return; draggedIndex.value = index; };[cite: 9]
+      const onDragStart = (index, e) => { if (!isHost.value) return; draggedIndex.value = index; };
       const onDragOver = (targetIndex, e) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         if (draggedIndex.value !== null && draggedIndex.value !== targetIndex) {
           const item = prepCategories.value.splice(draggedIndex.value, 1)[0];
           prepCategories.value.splice(targetIndex, 0, item);
@@ -1408,7 +1421,7 @@
       let lastSwappedY = 0;
 
       const onTouchStart = (index, e) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         touchStartIndex.value = index;
         draggedIndex.value = index;
         touchStartY = e.touches[0].clientY;
@@ -1416,7 +1429,7 @@
       };
 
       const onTouchMove = (e) => {
-        if (!isHost.value || touchStartIndex.value === null) return;[cite: 9]
+        if (!isHost.value || touchStartIndex.value === null) return;
         const currentY = e.touches[0].clientY;
         if (Math.abs(currentY - lastSwappedY) < 25) return;
         const touch = e.touches[0];
@@ -1449,7 +1462,7 @@
       const prepCatForm = ref({ title: '', icon: 'fa-solid fa-suitcase' });
 
       const openPrepCategoryModal = (cat = null) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         if (cat) {
           editingPrepCatId.value = cat.id;
           prepCatForm.value = { title: cat.title, icon: cat.icon || 'fa-solid fa-suitcase' };
@@ -1461,7 +1474,7 @@
       };
 
       const savePrepCategory = () => {
-        if (!isHost.value || !prepCatForm.value.title.trim()) return;[cite: 9]
+        if (!isHost.value || !prepCatForm.value.title.trim()) return;
         if (editingPrepCatId.value) {
           const catIndex = prepCategories.value.findIndex(c => c.id === editingPrepCatId.value);
           if (catIndex !== -1) {
@@ -1558,7 +1571,7 @@
       };
 
       const openAddPrepItemModal = (cat) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         const name = prompt(`在「${cat.title}」新增項目名稱：`);
         if (name && name.trim()) {
           if (!cat.items) cat.items = [];
@@ -1573,7 +1586,7 @@
       };
 
       const deletePrepCategory = (catId) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         if (confirm('確定要刪除整個類別及其項目嗎？')) {
           prepCategories.value = prepCategories.value.filter(c => c.id !== catId);
           saveProjectsToStorage();
@@ -1581,7 +1594,7 @@
       };
 
       const deletePrepItem = (catId, itemId, itemName) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         if (confirm(`確定要刪除項目「${itemName || '此項目'}」嗎？`)) {
           const cat = prepCategories.value.find(c => c.id === catId);
           if (cat && cat.items) {
@@ -1620,7 +1633,7 @@
       };
 
       const addNewDay = () => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         const input = prompt(`請輸入 Day ${days.value.length + 1} 的日期與星期：`, `9/${6 + days.value.length} (日)`);
         if (input) {
           days.value.push({ dateDisplay: input });
@@ -1630,7 +1643,7 @@
       };
 
       const openDateModal = () => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         const now = new Date();
         const year = now.getFullYear();
         dateInputVal.value = `${year}-09-06`;
@@ -1638,7 +1651,7 @@
       };
 
       const saveDayDate = () => {
-        if (!isHost.value || !dateInputVal.value) return;[cite: 9]
+        if (!isHost.value || !dateInputVal.value) return;
         const parts = dateInputVal.value.split('-');
         if (parts.length === 3) {
           const m = parseInt(parts[1], 10);
@@ -1655,7 +1668,7 @@
       };
 
       const deleteCurrentDay = () => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         if (confirm(`確定要刪除 Day ${selectedDayIndex.value + 1} 的整天行程嗎？`)) {
           days.value.splice(selectedDayIndex.value, 1);
           const sch = { ...scheduleData.value };
@@ -1667,7 +1680,7 @@
       };
 
       const uploadBanner = (e) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         const file = e.target.files[0];
         if (file) {
           const reader = new FileReader();
@@ -1680,7 +1693,7 @@
       };
 
       const handleImageUpload = (e) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         const file = e.target.files[0];
         if (file) {
           const reader = new FileReader();
@@ -1690,13 +1703,13 @@
       };
 
       const selectAddType = (type) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         showAddMenu.value = false;
         openAddModal(type);
       };
 
       const openAddModal = (type = null) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         isEditing.value = false;
         if (currentTab.value === 'itinerary') formData.value = { category: type || '景點', time: '10:00' };
         else if (currentTab.value === 'drive') formData.value = { type: type || '租車' };
@@ -1706,14 +1719,14 @@
       };
 
       const openEditModal = (item) => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         isEditing.value = true;
         formData.value = { ...item };
         showModal.value = true;
       };
 
       const saveData = () => {
-        if (!isHost.value) return;[cite: 9]
+        if (!isHost.value) return;
         if (currentTab.value === 'itinerary') {
           const sch = { ...scheduleData.value };
           if (!sch[selectedDayIndex.value]) sch[selectedDayIndex.value] = [];
@@ -1757,8 +1770,8 @@
       };
 
       const confirmDelete = () => {
-        if (!isHost.value) return;[cite: 9]
-        if (confirm('確定要刪除這筆資料嗎？')) {
+        if (!isHost.value) return;
+        if (confirm('確定要刪除此項目嗎？')) {
           if (currentTab.value === 'itinerary') {
             const sch = { ...scheduleData.value };
             sch[selectedDayIndex.value] = sch[selectedDayIndex.value].filter(i => i.id !== formData.value.id);
@@ -1776,19 +1789,97 @@
       };
 
       return {
-        isAuthenticated, userRole, isHost, passwordInput, passwordError, visitorPeerIdInput,
-        checkHostPassword, enterAsVisitor, logout, myPeerId, syncConnected, showShareModal,
-        projects, activeProjects, endedProjects, currentProjectId, showProjectModal, isEditingProject, newProjectForm, 
-        openNewProjectModal, openEditProjectModal, saveProject, selectProject, deleteProject, onHostAction,
-        currentTab, showNavMenu, showAddMenu, switchTab, bannerUrl, selectedDayIndex, days,
-        scheduleData, currentDaySchedule, driveList, shoppingList, expenses, totalExpense, japanesePhrases,
-        prepCategories, expandedPrepCategories, togglePrepCategory, getCompletedPrepCount, deletePrepCategory, deletePrepItem,
-        prepIcons, showPrepCatModal, editingPrepCatId, prepCatForm, openPrepCategoryModal, savePrepCategory, openAddPrepItemModal,
-        openMap, callPhone, previewImg, showLargeJapanese, speakJapanese, addNewDay, openDateModal, saveDayDate,
-        deleteCurrentDay, uploadBanner, handleImageUpload, selectAddType, openAddModal, openEditModal, saveData, confirmDelete,
-        previewImageSrc, largeJapaneseItem, showModal, showDateModal, dateInputVal, isEditing, formData,
-        onDragStart, onDragOver, onDrop, onDragEnd, draggedIndex,
-        onTouchStart, onTouchMove, onTouchEnd
+        isAuthenticated,
+        userRole,
+        isHost,
+        passwordInput,
+        passwordError,
+        visitorPeerIdInput,
+        myPeerId,
+        syncConnected,
+        showShareModal,
+        checkHostPassword,
+        enterAsVisitor,
+        logout,
+
+        projects,
+        currentProjectId,
+        activeProjects,
+        endedProjects,
+        showProjectModal,
+        isEditingProject,
+        newProjectForm,
+        openNewProjectModal,
+        openEditProjectModal,
+        saveProject,
+        selectProject,
+        deleteProject,
+
+        bannerUrl,
+        days,
+        scheduleData,
+        prepCategories,
+        driveList,
+        shoppingList,
+        expenses,
+
+        currentTab,
+        showNavMenu,
+        showAddMenu,
+        selectedDayIndex,
+        showModal,
+        showDateModal,
+        dateInputVal,
+        isEditing,
+        formData,
+        previewImageSrc,
+        largeJapaneseItem,
+        selectedJpCategory,
+
+        draggedIndex,
+        onDragStart,
+        onDragOver,
+        onDrop,
+        onDragEnd,
+        onTouchStart,
+        onTouchMove,
+        onTouchEnd,
+
+        prepIcons,
+        showPrepCatModal,
+        editingPrepCatId,
+        prepCatForm,
+        openPrepCategoryModal,
+        savePrepCategory,
+        expandedPrepCategories,
+        togglePrepCategory,
+        getCompletedPrepCount,
+        openAddPrepItemModal,
+        deletePrepCategory,
+        deletePrepItem,
+        onHostAction,
+
+        japanesePhrases,
+        currentDaySchedule,
+        totalExpense,
+
+        switchTab,
+        openMap,
+        callPhone,
+        previewImg,
+        showLargeJapanese,
+        speakJapanese,
+        addNewDay,
+        openDateModal,
+        saveDayDate,
+        deleteCurrentDay,
+        uploadBanner,
+        handleImageUpload,
+        selectAddType,
+        openAddModal,
+        openEditModal,
+        saveData,
+        confirmDelete
       };
     }
   }).mount('#app');
