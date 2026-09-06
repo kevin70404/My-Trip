@@ -96,6 +96,9 @@
         <input type="password" inputmode="numeric" v-model="passwordInput" placeholder="請輸入主機編輯密碼" 
                class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-4 py-3 text-center text-sm tracking-widest font-bold focus:outline-none focus:border-beigetone-800">
         
+        <input type="text" v-model="customHostPeerIdInput" placeholder="自訂主機代碼 (預設: kevin-jang-19950214)" 
+               class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-3 py-2 text-center text-xs font-mono focus:outline-none focus:border-beigetone-800">
+
         <button type="submit" class="w-full bg-beigetone-800 text-white font-bold py-3 rounded-2xl shadow-md hover:bg-beigetone-900 transition active:scale-95 text-sm">
           <i class="fa-solid fa-pen-to-square mr-1.5"></i> 以主機（編輯者）身分進入
         </button>
@@ -111,9 +114,9 @@
         <div class="flex-grow border-t border-beigetone-200"></div>
       </div>
 
-      <!-- 訪客登入表單 (支援輸入主機 Peer ID 進行同步) -->
+      <!-- 訪客登入表單 -->
       <div class="space-y-2 pt-1">
-        <input type="text" v-model="visitorPeerIdInput" placeholder="輸入主機代碼 (Peer ID) 進行同步" 
+        <input type="text" v-model="visitorPeerIdInput" placeholder="輸入主機代碼進行同步" 
                class="w-full bg-beigetone-50 border border-beigetone-200 rounded-2xl px-3 py-2.5 text-center text-xs font-mono focus:outline-none focus:border-beigetone-800">
         <button @click="enterAsVisitor" class="w-full bg-beigetone-100 hover:bg-beigetone-200 text-beigetone-800 font-bold py-3 rounded-2xl transition active:scale-95 text-sm flex items-center justify-center gap-1.5">
           <i class="fa-solid fa-eye"></i> 以訪客（即時同步檢視）身分進入
@@ -455,7 +458,6 @@
 
               <div v-for="item in cat.items" :key="item.id" class="flex items-center justify-between group">
                 <label class="flex items-center gap-2.5 cursor-pointer flex-1">
-                  <!-- 訪客唯讀狀態下禁用勾選變更，若為主機可同步 -->
                   <input type="checkbox" v-model="item.completed" :disabled="!isHost" @change="onHostAction" class="w-4 h-4 rounded text-beigetone-800 focus:ring-beigetone-800 border-beigetone-300 disabled:opacity-50">
                   <span :class="item.completed ? 'line-through text-beigetone-300' : 'text-beigetone-800'" class="text-xs font-medium break-all">
                     {{ item.name }}
@@ -1037,10 +1039,11 @@
       const passwordInput = ref('');
       const passwordError = ref(false);
       const visitorPeerIdInput = ref('');
+      const customHostPeerIdInput = ref('kevin-jang-19950214'); // 設定預設主機代碼
       
       const isHost = computed(() => userRole.value === 'host');
 
-      // PeerJS 配置：新增 Google STUN 伺服器設定以修復 NAT 穿透連線問題
+      // PeerJS 配置：使用 Google STUN 伺服器
       const peerConfig = {
         config: {
           iceServers: [
@@ -1056,19 +1059,33 @@
       const syncConnected = ref(false);
       const showShareModal = ref(false);
       let peer = null;
-      let conn = null; // 訪客連線到主機的連線物件
-      let hostConnections = []; // 主機儲存所有連進來的訪客連線
+      let conn = null; // 訪客連線物件
+      let hostConnections = []; // 主機儲存所有訪客連線
 
-      const initPeerAsHost = () => {
+      const initPeerAsHost = (desiredPeerId) => {
         try {
-          peer = new Peer(peerConfig);
+          // 若有指定自訂代碼，則優先以該 ID 建立 Peer 實體
+          const peerIdToUse = desiredPeerId ? desiredPeerId.trim() : 'kevin-jang-19950214';
+          peer = new Peer(peerIdToUse, peerConfig);
+          
           peer.on('open', (id) => {
             myPeerId.value = id;
           });
-          peer.on('connection', (connection) => {
+          
+          peer.on('error', (err) => {
+            console.warn("自訂 Peer ID 建立失敗，改用隨機產生 ID", err);
+            // 當指定的 ID 已被佔用或不合法時，降級為隨機分配 ID
+            if (peer) peer.destroy();
+            peer = new Peer(peerConfig);
+            peer.on('open', (id) => {
+              myPeerId.value = id;
+            });
+            peer.on('connection', handleHostConnection);
+          });
+
+          const handleHostConnection = (connection) => {
             hostConnections.push(connection);
             syncConnected.value = true;
-            // 連線建立時點即傳送目前完整專案資料給新訪客
             connection.on('open', () => {
               connection.send({ type: 'SYNC_ALL', projects: projects.value });
             });
@@ -1076,7 +1093,9 @@
               hostConnections = hostConnections.filter(c => c !== connection);
               if (hostConnections.length === 0) syncConnected.value = false;
             });
-          });
+          };
+
+          peer.on('connection', handleHostConnection);
         } catch(e) {
           console.error("PeerJS host init error:", e);
         }
@@ -1128,7 +1147,7 @@
           userRole.value = 'host';
           isAuthenticated.value = true;
           passwordError.value = false;
-          initPeerAsHost();
+          initPeerAsHost(customHostPeerIdInput.value);
         } else {
           passwordError.value = true;
         }
@@ -1606,10 +1625,10 @@
       };
 
       const openMap = (mapUrl, name) => {
-        if (mapUrl && mapUrl.trim() !== '') {
-          window.open(mapUrl.trim(), '_blank');
-        } else if (name && name.trim() !== '') {
-          window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name.trim())}`, '_blank');
+        if (mapUrl && mapUrl.trim()) {
+          window.open(mapUrl, '_blank');
+        } else {
+          window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name)}`, '_blank');
         }
       };
 
@@ -1617,50 +1636,48 @@
         if (phone) window.location.href = `tel:${phone.replace(/[^0-9+]/g, '')}`;
       };
 
-      const previewImg = (src) => { previewImageSrc.value = src; };
-      const showLargeJapanese = (item) => { largeJapaneseItem.value = item; };
-
       const speakJapanese = (text) => {
         if ('speechSynthesis' in window) {
-          window.speechSynthesis.cancel();
           const utterance = new SpeechSynthesisUtterance(text);
           utterance.lang = 'ja-JP';
-          utterance.rate = 0.9;
           window.speechSynthesis.speak(utterance);
         } else {
-          alert('您的瀏覽器不支援語音播放功能');
+          alert('您的裝置不支援語音合成發音');
         }
+      };
+
+      const showLargeJapanese = (item) => {
+        largeJapaneseItem.value = item;
+      };
+
+      const previewImg = (src) => {
+        previewImageSrc.value = src;
       };
 
       const addNewDay = () => {
         if (!isHost.value) return;
-        const input = prompt(`請輸入 Day ${days.value.length + 1} 的日期與星期：`, `9/${6 + days.value.length} (日)`);
-        if (input) {
-          days.value.push({ dateDisplay: input });
-          selectedDayIndex.value = days.value.length - 1;
-          saveProjectsToStorage();
-        }
+        const nextDayNum = days.value.length + 1;
+        days.value.push({ dateDisplay: `Day ${nextDayNum}` });
+        saveProjectsToStorage();
       };
 
       const openDateModal = () => {
         if (!isHost.value) return;
-        const now = new Date();
-        const year = now.getFullYear();
-        dateInputVal.value = `${year}-09-06`;
+        dateInputVal.value = '';
         showDateModal.value = true;
       };
 
       const saveDayDate = () => {
-        if (!isHost.value || !dateInputVal.value) return;
-        const parts = dateInputVal.value.split('-');
-        if (parts.length === 3) {
-          const m = parseInt(parts[1], 10);
-          const d = parseInt(parts[2], 10);
-          const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-          const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-          const wk = weekdays[dateObj.getDay()];
-          if (days.value[selectedDayIndex.value]) {
-            days.value[selectedDayIndex.value].dateDisplay = `${m}/${d} (${wk})`;
+        if (!isHost.value) return;
+        if (dateInputVal.value) {
+          const parts = dateInputVal.value.split('-');
+          if (parts.length === 3) {
+            const m = parseInt(parts[1], 10);
+            const d = parseInt(parts[2], 10);
+            const dateObj = new Date(parts[0], m - 1, d);
+            const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
+            const w = weekDays[dateObj.getDay()];
+            days.value[selectedDayIndex.value].dateDisplay = `${m}/${d} (${w})`;
             saveProjectsToStorage();
           }
         }
@@ -1669,14 +1686,41 @@
 
       const deleteCurrentDay = () => {
         if (!isHost.value) return;
-        if (confirm(`確定要刪除 Day ${selectedDayIndex.value + 1} 的整天行程嗎？`)) {
+        if (confirm(`確定要刪除 Day ${selectedDayIndex.value + 1} 嗎？此日期的行程將一併清除。`)) {
           days.value.splice(selectedDayIndex.value, 1);
-          const sch = { ...scheduleData.value };
-          delete sch[selectedDayIndex.value];
-          scheduleData.value = sch;
-          selectedDayIndex.value = Math.max(0, selectedDayIndex.value - 1);
+          delete scheduleData.value[selectedDayIndex.value];
+          if (selectedDayIndex.value >= days.value.length) {
+            selectedDayIndex.value = Math.max(0, days.value.length - 1);
+          }
           saveProjectsToStorage();
         }
+      };
+
+      const openAddModal = () => {
+        if (!isHost.value) return;
+        isEditing.value = false;
+        formData.value = { id: Date.now().toString() };
+        if (currentTab.value === 'expense') formData.value.category = '交通';
+        showModal.value = true;
+      };
+
+      const selectAddType = (type) => {
+        if (!isHost.value) return;
+        isEditing.value = false;
+        showAddMenu.value = false;
+        if (currentTab.value === 'itinerary') {
+          formData.value = { id: Date.now().toString(), category: type, time: '12:00' };
+        } else if (currentTab.value === 'drive') {
+          formData.value = { id: Date.now().toString(), type: type };
+        }
+        showModal.value = true;
+      };
+
+      const openEditModal = (item) => {
+        if (!isHost.value) return;
+        isEditing.value = true;
+        formData.value = JSON.parse(JSON.stringify(item));
+        showModal.value = true;
       };
 
       const uploadBanner = (e) => {
@@ -1684,87 +1728,63 @@
         const file = e.target.files[0];
         if (file) {
           const reader = new FileReader();
-          reader.onload = (evt) => {
-            bannerUrl.value = evt.target.result;
-            saveProjectsToStorage();
+          reader.onload = (event) => {
+            bannerUrl.value = event.target.result;
           };
           reader.readAsDataURL(file);
         }
       };
 
       const handleImageUpload = (e) => {
-        if (!isHost.value) return;
         const file = e.target.files[0];
         if (file) {
           const reader = new FileReader();
-          reader.onload = (evt) => formData.value.image = evt.target.result;
+          reader.onload = (event) => {
+            formData.value.image = event.target.result;
+          };
           reader.readAsDataURL(file);
         }
-      };
-
-      const selectAddType = (type) => {
-        if (!isHost.value) return;
-        showAddMenu.value = false;
-        openAddModal(type);
-      };
-
-      const openAddModal = (type = null) => {
-        if (!isHost.value) return;
-        isEditing.value = false;
-        if (currentTab.value === 'itinerary') formData.value = { category: type || '景點', time: '10:00' };
-        else if (currentTab.value === 'drive') formData.value = { type: type || '租車' };
-        else if (currentTab.value === 'expense') formData.value = { category: '飲食', payMethod: '現金' };
-        else formData.value = {};
-        showModal.value = true;
-      };
-
-      const openEditModal = (item) => {
-        if (!isHost.value) return;
-        isEditing.value = true;
-        formData.value = { ...item };
-        showModal.value = true;
       };
 
       const saveData = () => {
         if (!isHost.value) return;
         if (currentTab.value === 'itinerary') {
-          const sch = { ...scheduleData.value };
-          if (!sch[selectedDayIndex.value]) sch[selectedDayIndex.value] = [];
-          if (isEditing.value) {
-            const idx = sch[selectedDayIndex.value].findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) sch[selectedDayIndex.value][idx] = { ...formData.value };
-          } else {
-            sch[selectedDayIndex.value].push({ ...formData.value, id: Date.now().toString() });
+          if (!scheduleData.value[selectedDayIndex.value]) {
+            scheduleData.value[selectedDayIndex.value] = [];
           }
-          scheduleData.value = sch;
+          const dayList = scheduleData.value[selectedDayIndex.value];
+          if (isEditing.value) {
+            const idx = dayList.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) dayList[idx] = { ...formData.value };
+          } else {
+            dayList.push({ ...formData.value });
+          }
         } else if (currentTab.value === 'drive') {
-          const list = [...driveList.value];
           if (isEditing.value) {
-            const idx = list.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) list[idx] = { ...formData.value };
+            const idx = driveList.value.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) driveList.value[idx] = { ...formData.value };
           } else {
-            list.push({ ...formData.value, id: Date.now().toString() });
+            driveList.value.push({ ...formData.value });
           }
-          driveList.value = list;
         } else if (currentTab.value === 'shopping') {
-          const list = [...shoppingList.value];
           if (isEditing.value) {
-            const idx = list.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) list[idx] = { ...formData.value };
+            const idx = shoppingList.value.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) shoppingList.value[idx] = { ...formData.value };
           } else {
-            list.push({ ...formData.value, id: Date.now().toString() });
+            shoppingList.value.push({ ...formData.value });
           }
-          shoppingList.value = list;
         } else if (currentTab.value === 'expense') {
-          const list = [...expenses.value];
-          if (isEditing.value) {
-            const idx = list.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) list[idx] = { ...formData.value };
-          } else {
-            list.push({ ...formData.value, id: Date.now().toString(), date: new Date().toISOString().split('T')[0] });
+          if (!formData.value.date) {
+            formData.value.date = new Date().toISOString().split('T')[0];
           }
-          expenses.value = list;
+          if (isEditing.value) {
+            const idx = expenses.value.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) expenses.value[idx] = { ...formData.value };
+          } else {
+            expenses.value.push({ ...formData.value });
+          }
         }
+
         saveProjectsToStorage();
         showModal.value = false;
       };
@@ -1773,9 +1793,7 @@
         if (!isHost.value) return;
         if (confirm('確定要刪除此項目嗎？')) {
           if (currentTab.value === 'itinerary') {
-            const sch = { ...scheduleData.value };
-            sch[selectedDayIndex.value] = sch[selectedDayIndex.value].filter(i => i.id !== formData.value.id);
-            scheduleData.value = sch;
+            scheduleData.value[selectedDayIndex.value] = scheduleData.value[selectedDayIndex.value].filter(i => i.id !== formData.value.id);
           } else if (currentTab.value === 'drive') {
             driveList.value = driveList.value.filter(i => i.id !== formData.value.id);
           } else if (currentTab.value === 'shopping') {
@@ -1795,13 +1813,13 @@
         passwordInput,
         passwordError,
         visitorPeerIdInput,
+        customHostPeerIdInput,
         myPeerId,
         syncConnected,
         showShareModal,
         checkHostPassword,
         enterAsVisitor,
         logout,
-
         projects,
         currentProjectId,
         activeProjects,
@@ -1814,7 +1832,6 @@
         saveProject,
         selectProject,
         deleteProject,
-
         bannerUrl,
         days,
         scheduleData,
@@ -1822,7 +1839,6 @@
         driveList,
         shoppingList,
         expenses,
-
         currentTab,
         showNavMenu,
         showAddMenu,
@@ -1835,7 +1851,6 @@
         previewImageSrc,
         largeJapaneseItem,
         selectedJpCategory,
-
         draggedIndex,
         onDragStart,
         onDragOver,
@@ -1844,7 +1859,6 @@
         onTouchStart,
         onTouchMove,
         onTouchEnd,
-
         prepIcons,
         showPrepCatModal,
         editingPrepCatId,
@@ -1852,38 +1866,35 @@
         openPrepCategoryModal,
         savePrepCategory,
         expandedPrepCategories,
+        japanesePhrases,
+        currentDaySchedule,
+        totalExpense,
+        switchTab,
         togglePrepCategory,
         getCompletedPrepCount,
         openAddPrepItemModal,
         deletePrepCategory,
         deletePrepItem,
-        onHostAction,
-
-        japanesePhrases,
-        currentDaySchedule,
-        totalExpense,
-
-        switchTab,
         openMap,
         callPhone,
-        previewImg,
-        showLargeJapanese,
         speakJapanese,
+        showLargeJapanese,
+        previewImg,
         addNewDay,
         openDateModal,
         saveDayDate,
         deleteCurrentDay,
+        openAddModal,
+        selectAddType,
+        openEditModal,
         uploadBanner,
         handleImageUpload,
-        selectAddType,
-        openAddModal,
-        openEditModal,
         saveData,
-        confirmDelete
+        confirmDelete,
+        onHostAction
       };
     }
   }).mount('#app');
 </script>
-
 </body>
 </html>
