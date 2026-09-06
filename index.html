@@ -5,7 +5,7 @@
   <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
   <meta name="googlebot" content="noindex, nofollow">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>日系極簡隨行行程表</title>
+  <title>日系極簡多功能行程表</title>
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -65,7 +65,6 @@
       opacity: 0.5;
       transform: scale(0.98);
     }
-    /* 防止手機長按選取文字與出現彈窗 */
     .touch-none-select {
       -webkit-user-select: none;
       -moz-user-select: none;
@@ -79,7 +78,7 @@
 
 <div id="app">
 
-  <!-- ================= 密碼驗證解鎖畫面 ================= -->
+  <!-- ================= 1. 密碼驗證解鎖畫面 ================= -->
   <div v-if="!isAuthenticated" class="fixed inset-0 bg-beigetone-100 z-50 flex flex-col items-center justify-center p-6 text-center">
     <div class="bg-white p-8 rounded-3xl shadow-xl w-full max-w-sm border border-beigetone-200">
       <div class="w-16 h-16 bg-beigetone-200 text-beigetone-800 rounded-full flex items-center justify-center text-2xl mx-auto mb-4">
@@ -103,7 +102,117 @@
     </div>
   </div>
 
-  <!-- ================= 主 Web App 畫面 ================= -->
+  <!-- ================= 2. 行程專案選擇大廳 ================= -->
+  <template v-else-if="!currentProjectId">
+    <div class="p-6 space-y-6">
+      <div class="bg-white p-5 rounded-3xl shadow-sm border border-beigetone-200">
+        <h1 class="text-lg font-bold text-beigetone-900">我的旅程專案</h1>
+        <p class="text-xs text-beigetone-400 mt-0.5">選擇一個專案進入編輯，或建立新旅程</p>
+      </div>
+
+      <!-- 進行中 / 即將到來專案列表 -->
+      <div class="space-y-3">
+        <h3 class="text-xs font-bold text-beigetone-800 tracking-wider px-1">進行中 / 即將出遊</h3>
+        <div v-for="proj in activeProjects" :key="proj.id" 
+             @click="selectProject(proj.id)"
+             class="bg-white rounded-3xl p-4 shadow-sm border border-beigetone-200 hover:border-beigetone-800 transition cursor-pointer flex items-center gap-4 group relative overflow-hidden">
+          
+          <div class="w-20 h-20 rounded-2xl overflow-hidden bg-beigetone-100 flex-shrink-0 relative">
+            <img :src="proj.bannerUrl || 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1920&auto=format&fit=crop'" class="w-full h-full object-cover">
+          </div>
+
+          <div class="flex-1 min-w-0 pr-12">
+            <h3 class="font-bold text-base text-beigetone-900 truncate group-hover:text-beigetone-800 transition">{{ proj.title }}</h3>
+            <p class="text-xs text-accent-terracotta font-medium mt-0.5">{{ proj.dateRange || '未設定日期' }}</p>
+            <p class="text-[11px] text-beigetone-400 mt-1 truncate">{{ proj.description || '點擊進入詳細行程管理' }}</p>
+          </div>
+
+          <div class="absolute top-3 right-3 flex items-center gap-1">
+            <button @click.stop="openEditProjectModal(proj)" class="text-beigetone-300 hover:text-beigetone-800 p-2 text-xs transition" title="編輯專案設定">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button @click.stop="deleteProject(proj.id)" class="text-beigetone-300 hover:text-red-500 p-2 text-xs transition" title="刪除專案">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+
+        <div v-if="activeProjects.length === 0" class="text-center py-8 text-xs text-beigetone-400 bg-white/50 rounded-2xl border border-dashed border-beigetone-200">
+          目前沒有進行中的行程專案
+        </div>
+      </div>
+
+      <!-- 已結束專案列表 -->
+      <div v-if="endedProjects.length > 0" class="space-y-3 pt-2">
+        <h3 class="text-xs font-bold text-beigetone-400 tracking-wider px-1">已結束的專案 (歷史紀錄)</h3>
+        <div v-for="proj in endedProjects" :key="proj.id" 
+             @click="selectProject(proj.id)"
+             class="bg-white/80 rounded-3xl p-4 shadow-sm border border-beigetone-200 hover:border-beigetone-800 transition cursor-pointer flex items-center gap-4 group relative overflow-hidden opacity-80 hover:opacity-100">
+          
+          <div class="w-20 h-20 rounded-2xl overflow-hidden bg-beigetone-100 flex-shrink-0 relative grayscale">
+            <img :src="proj.bannerUrl || 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1920&auto=format&fit=crop'" class="w-full h-full object-cover">
+          </div>
+
+          <div class="flex-1 min-w-0 pr-12">
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] bg-beigetone-200 text-beigetone-800 px-1.5 py-0.5 rounded font-bold">已結束</span>
+              <h3 class="font-bold text-base text-beigetone-900 truncate">{{ proj.title }}</h3>
+            </div>
+            <p class="text-xs text-beigetone-400 font-medium mt-0.5">{{ proj.dateRange || '未設定日期' }}</p>
+            <p class="text-[11px] text-beigetone-400 mt-1 truncate">{{ proj.description || '點擊檢視歷史行程與回憶' }}</p>
+          </div>
+
+          <div class="absolute top-3 right-3 flex items-center gap-1">
+            <button @click.stop="openEditProjectModal(proj)" class="text-beigetone-300 hover:text-beigetone-800 p-2 text-xs transition" title="編輯專案設定">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+            <button @click.stop="deleteProject(proj.id)" class="text-beigetone-300 hover:text-red-500 p-2 text-xs transition" title="刪除專案">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右下角浮動新增專案按鈕 (+) -->
+    <div class="fixed bottom-6 right-6 z-40">
+      <button @click="openNewProjectModal" class="w-14 h-14 bg-beigetone-800 text-white rounded-full shadow-2xl flex items-center justify-center text-2xl z-40 active:scale-95 transition hover:bg-beigetone-900" title="新增專案">
+        <i class="fa-solid fa-plus"></i>
+      </button>
+    </div>
+
+    <!-- 新增/編輯專案彈窗 -->
+    <div v-if="showProjectModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div class="bg-white w-full max-w-sm rounded-[28px] p-6 space-y-4 shadow-2xl">
+        <div class="flex justify-between items-center">
+          <h3 class="font-bold text-lg text-beigetone-900">{{ isEditingProject ? '編輯行程專案' : '建立新行程專案' }}</h3>
+          <button @click="showProjectModal = false" class="text-beigetone-400 hover:text-beigetone-800"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs font-bold text-beigetone-800 block mb-1">專案名稱</label>
+            <input v-model="newProjectForm.title" placeholder="例如：2026 東京賞楓五日遊" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-beigetone-800">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-beigetone-800 block mb-1">日期區間備註 (用於自動排序)</label>
+            <input v-model="newProjectForm.dateRange" placeholder="例如：2026/09/06 - 2026/09/10 或 9/6-9/10" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-beigetone-800">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-beigetone-800 block mb-1">簡短描述</label>
+            <input v-model="newProjectForm.description" placeholder="例如：秋季限定、自駕遊" class="w-full bg-beigetone-50 border border-beigetone-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-beigetone-800">
+          </div>
+        </div>
+
+        <div class="flex gap-2 pt-2">
+          <button @click="showProjectModal = false" class="w-1/3 bg-beigetone-100 text-beigetone-800 font-bold py-2.5 rounded-xl text-sm">取消</button>
+          <button @click="saveProject" class="flex-1 bg-beigetone-800 text-white font-bold py-2.5 rounded-xl text-sm">儲存</button>
+        </div>
+      </div>
+    </div>
+  </template>
+
+  <!-- ================= 3. 主 Web App 畫面 (選定特定專案後) ================= -->
   <template v-else>
     <!-- 頁首 Banner -->
     <div class="relative w-full h-[220px] bg-beigetone-300 overflow-hidden">
@@ -243,17 +352,14 @@
           目前還沒有行前準備項目，點選右下角「+」開始新增類別吧！
         </div>
 
-        <!-- 可拖拉圖卡區域 -->
         <div class="space-y-3">
           <div v-for="(cat, index) in prepCategories" :key="cat.id"
                :data-index="index"
                :class="{ 'dragging': draggedIndex === index }"
                class="prep-card bg-white rounded-2xl border border-beigetone-200 shadow-sm overflow-hidden transition-all duration-200">
             
-            <!-- 類別圖卡 header -->
             <div @click="togglePrepCategory(cat.id)" class="p-4 bg-beigetone-50 flex items-center justify-between cursor-pointer hover:bg-beigetone-100/60 transition gap-2">
               <div class="flex items-center gap-2 min-w-0 flex-1">
-                <!-- 拖拉握把：修正點擊阻止冒泡事件 -->
                 <i class="fa-solid fa-grip-lines text-beigetone-300 cursor-grab active:cursor-grabbing p-1.5 touch-none touch-none-select flex-shrink-0" 
                    draggable="true"
                    @dragstart="onDragStart(index, $event)"
@@ -283,7 +389,6 @@
               </div>
             </div>
 
-            <!-- 可隱藏式清單列表 -->
             <div v-if="expandedPrepCategories.includes(cat.id)" class="p-4 border-t border-beigetone-100 space-y-2.5">
               <div v-if="cat.items.length === 0" class="text-xs text-beigetone-400 text-center py-2">
                 此類別暫無項目，點擊右上角「+ 項目」新增。
@@ -577,7 +682,11 @@
     <div class="fixed bottom-6 left-6 z-40">
       <div v-if="showNavMenu" @click="showNavMenu = false" class="fixed inset-0 bg-black/20 backdrop-blur-xs z-30"></div>
 
-      <div v-if="showNavMenu" class="absolute bottom-16 left-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beigetone-200 min-w-[160px] space-y-1 z-40 transition-all duration-200">
+      <div v-if="showNavMenu" class="absolute bottom-16 left-0 bg-white/95 backdrop-blur-md rounded-2xl p-2 shadow-2xl border border-beigetone-200 min-w-[170px] space-y-1 z-40 transition-all duration-200">
+        <button @click="currentProjectId = null; showNavMenu = false" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold text-accent-terracotta hover:bg-beigetone-100 transition border-b border-beigetone-100 mb-1">
+          <i class="fa-solid fa-arrow-left-long w-5 text-center"></i>
+          <span>切換行程專案</span>
+        </button>
         <button @click="switchTab('itinerary')" :class="currentTab === 'itinerary' ? 'bg-beigetone-800 text-white' : 'text-beigetone-800 hover:bg-beigetone-100'" class="w-full px-3.5 py-2.5 rounded-xl flex items-center gap-3 text-sm font-bold transition">
           <i class="fa-solid fa-map-location-dot w-5 text-center"></i>
           <span>行程表</span>
@@ -874,10 +983,238 @@
         }
       };
 
+      // 專案多重管理系統
+      const loadProjects = () => {
+        try {
+          const saved = localStorage.getItem('trip_projects_list_v1');
+          if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        // 預設給一個初始專案
+        return [{
+          id: 'default_tokyo',
+          title: '東京極簡五日遊',
+          dateRange: '2026/09/06 - 2026/09/10',
+          description: '初次東京自由行、淺草寺與自駕',
+          bannerUrl: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1920&auto=format&fit=crop',
+          days: [
+            { dateDisplay: '9/6 (日)' },
+            { dateDisplay: '9/7 (一)' },
+            { dateDisplay: '9/8 (二)' },
+            { dateDisplay: '9/9 (三)' },
+            { dateDisplay: '9/10 (四)' },
+          ],
+          scheduleData: {
+            0: [
+              { id: '1', category: '航班', time: '08:15', flightNo: 'JX800', depAirport: 'TPE', depCn: '台北桃園', arrAirport: 'NRT', arrCn: '東京成田', depTime: '08:15', arrTime: '12:30' },
+              { id: '2', category: '景點', time: '14:00', name: '淺草寺', ticket: '免費', note: '買人形燒' }
+            ]
+          },
+          prepCategories: [
+            {
+              id: '1',
+              title: '證件與重要文件',
+              icon: 'fa-solid fa-passport',
+              items: [
+                { id: '1-1', name: '護照 (檢查有效期6個月以上)', completed: false },
+                { id: '1-2', name: '日航/機票電子憑證', completed: false }
+              ]
+            }
+          ],
+          driveList: [
+            { id: '1', type: '租車', company: 'Toyota Rent-a-Car', carModel: 'Yaris', reservationNo: 'TR-882910', mapCode: '33 157 281*00', pickupStore: '成田機場 T1 店', pickupTime: '9/6 13:30', returnStore: '成田機場 T1 店', returnTime: '9/10 16:00', phone: '+81-476-32-1020', mapUrl: '' }
+          ],
+          shoppingList: [
+            { id: '1', name: '合利他命 EX Plus強效錠', price: 5980, location: '唐吉訶德 澀谷店', mapUrl: '', image: '' }
+          ],
+          expenses: [
+            { id: '1', category: '飲食', name: '敘敘苑燒肉', amount: 12000, payMethod: '信用卡', date: '2026-09-06', image: '' }
+          ]
+        }];
+      };
+
+      const projects = ref(loadProjects());
+      const currentProjectId = ref(null);
+      const showProjectModal = ref(false);
+      const isEditingProject = ref(false);
+      const editingProjectId = ref(null);
+      const newProjectForm = ref({ title: '', dateRange: '', description: '' });
+
+      // 從日期字串中萃取出結束日期 (用於排序與判斷是否已結束)
+      const parseProjectEndDate = (dateRangeStr) => {
+        if (!dateRangeStr) return new Date(9999, 0, 1); // 沒有日期的排在後面或視為進行中
+        // 嘗試找出所有日期格式，如 YYYY/MM/DD 或 M/D
+        const matches = dateRangeStr.match(/(\d{1,4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})|(\d{1,2})[\/\.-](\d{1,2})/g);
+        if (matches && matches.length > 0) {
+          const lastMatch = matches[matches.length - 1]; // 取區間最後一個日期作為結束日
+          const parts = lastMatch.split(/[\/\.-]/);
+          const nowYear = new Date().getFullYear();
+          if (parts.length === 3) {
+            return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+          } else if (parts.length === 2) {
+            return new Date(nowYear, parseInt(parts[0]) - 1, parseInt(parts[1]));
+          }
+        }
+        return new Date(9999, 0, 1);
+      };
+
+      // 取得專案開始日期 (用於最近的排越上面)
+      const parseProjectStartDate = (dateRangeStr) => {
+        if (!dateRangeStr) return new Date(9999, 0, 1);
+        const matches = dateRangeStr.match(/(\d{1,4})[\/\.-](\d{1,2})[\/\.-](\d{1,2})|(\d{1,2})[\/\.-](\d{1,2})/g);
+        if (matches && matches.length > 0) {
+          const firstMatch = matches[0];
+          const parts = firstMatch.split(/[\/\.-]/);
+          const nowYear = new Date().getFullYear();
+          if (parts.length === 3) {
+            return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+          } else if (parts.length === 2) {
+            return new Date(nowYear, parseInt(parts[0]) - 1, parseInt(parts[1]));
+          }
+        }
+        return new Date(9999, 0, 1);
+      };
+
+      // 進行中 / 即將出遊專案 (依離出遊日期最近排序)
+      const activeProjects = computed(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return projects.value.filter(p => {
+          const endDate = parseProjectEndDate(p.dateRange);
+          return endDate >= today || !p.dateRange;
+        }).sort((a, b) => {
+          return parseProjectStartDate(a.dateRange) - parseProjectStartDate(b.dateRange);
+        });
+      });
+
+      // 已結束專案
+      const endedProjects = computed(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        return projects.value.filter(p => {
+          const endDate = parseProjectEndDate(p.dateRange);
+          return endDate < today && p.dateRange;
+        }).sort((a, b) => {
+          return parseProjectEndDate(b.dateRange) - parseProjectEndDate(a.dateRange); // 最近結束的排越上面
+        });
+      });
+
+      const openNewProjectModal = () => {
+        isEditingProject.value = false;
+        editingProjectId.value = null;
+        newProjectForm.value = { title: '', dateRange: '', description: '' };
+        showProjectModal.value = true;
+      };
+
+      const openEditProjectModal = (proj) => {
+        isEditingProject.value = true;
+        editingProjectId.value = proj.id;
+        newProjectForm.value = { 
+          title: proj.title, 
+          dateRange: proj.dateRange, 
+          description: proj.description 
+        };
+        showProjectModal.value = true;
+      };
+
+      const saveProject = () => {
+        if (!newProjectForm.value.title.trim()) return;
+
+        if (isEditingProject.value && editingProjectId.value) {
+          const proj = projects.value.find(p => p.id === editingProjectId.value);
+          if (proj) {
+            proj.title = newProjectForm.value.title.trim();
+            proj.dateRange = newProjectForm.value.dateRange.trim() || '未定';
+            proj.description = newProjectForm.value.description.trim() || '';
+          }
+        } else {
+          const newId = 'proj_' + Date.now();
+          const newProj = {
+            id: newId,
+            title: newProjectForm.value.title.trim(),
+            dateRange: newProjectForm.value.dateRange.trim() || '未定',
+            description: newProjectForm.value.description.trim() || '新旅程專案',
+            bannerUrl: 'https://images.unsplash.com/photo-1488646953014-85cb44e25828?q=80&w=1920&auto=format&fit=crop',
+            days: [{ dateDisplay: 'Day 1' }],
+            scheduleData: { 0: [] },
+            prepCategories: [],
+            driveList: [],
+            shoppingList: [],
+            expenses: []
+          };
+          projects.value.push(newProj);
+          selectProject(newId);
+        }
+        saveProjectsToStorage();
+        showProjectModal.value = false;
+      };
+
+      const selectProject = (id) => {
+        currentProjectId.value = id;
+        selectedDayIndex.value = 0;
+      };
+
+      const deleteProject = (id) => {
+        if (confirm('確定要刪除這個行程專案嗎？')) {
+          projects.value = projects.value.filter(p => p.id !== id);
+          saveProjectsToStorage();
+          if (currentProjectId.value === id) {
+            currentProjectId.value = null;
+          }
+        }
+      };
+
+      const saveProjectsToStorage = () => {
+        localStorage.setItem('trip_projects_list_v1', JSON.stringify(projects.value));
+      };
+
+      // 當前選中專案的對應資料 computed
+      const currentProject = computed(() => {
+        return projects.value.find(p => p.id === currentProjectId.value) || null;
+      });
+
+      const bannerUrl = computed({
+        get: () => currentProject.value?.bannerUrl || '',
+        set: (val) => { if (currentProject.value) { currentProject.value.bannerUrl = val; saveProjectsToStorage(); } }
+      });
+
+      const days = computed({
+        get: () => currentProject.value?.days || [],
+        set: (val) => { if (currentProject.value) { currentProject.value.days = val; saveProjectsToStorage(); } }
+      });
+
+      const scheduleData = computed({
+        get: () => currentProject.value?.scheduleData || {},
+        set: (val) => { if (currentProject.value) { currentProject.value.scheduleData = val; saveProjectsToStorage(); } }
+      });
+
+      const prepCategories = computed({
+        get: () => currentProject.value?.prepCategories || [],
+        set: (val) => { if (currentProject.value) { currentProject.value.prepCategories = val; saveProjectsToStorage(); } }
+      });
+
+      const driveList = computed({
+        get: () => currentProject.value?.driveList || [],
+        set: (val) => { if (currentProject.value) { currentProject.value.driveList = val; saveProjectsToStorage(); } }
+      });
+
+      const shoppingList = computed({
+        get: () => currentProject.value?.shoppingList || [],
+        set: (val) => { if (currentProject.value) { currentProject.value.shoppingList = val; saveProjectsToStorage(); } }
+      });
+
+      const expenses = computed({
+        get: () => currentProject.value?.expenses || [],
+        set: (val) => { if (currentProject.value) { currentProject.value.expenses = val; saveProjectsToStorage(); } }
+      });
+
+      // 自動同步儲存監聽
+      watch(projects, () => {
+        saveProjectsToStorage();
+      }, { deep: true });
+
       const currentTab = ref('itinerary');
       const showNavMenu = ref(false);
       const showAddMenu = ref(false);
-      const bannerUrl = ref('https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?q=80&w=1920&auto=format&fit=crop');
       const selectedDayIndex = ref(0);
       const showModal = ref(false);
       const showDateModal = ref(false);
@@ -892,51 +1229,6 @@
         showNavMenu.value = false;
         showAddMenu.value = false;
       };
-
-      const loadSavedData = (key, fallback) => {
-        try {
-          const saved = localStorage.getItem(key);
-          return saved ? JSON.parse(saved) : fallback;
-        } catch(e) { return fallback; }
-      };
-
-      const days = ref(loadSavedData('trip_days_v2', [
-        { dateDisplay: '9/6 (日)' },
-        { dateDisplay: '9/7 (一)' },
-        { dateDisplay: '9/8 (二)' },
-        { dateDisplay: '9/9 (三)' },
-        { dateDisplay: '9/10 (四)' },
-      ]));
-
-      const scheduleData = ref(loadSavedData('trip_schedule_v3', {
-        0: [
-          { id: '1', category: '航班', time: '08:15', flightNo: 'JX800', depAirport: 'TPE', depCn: '台北桃園', arrAirport: 'NRT', arrCn: '東京成田', depTime: '08:15', arrTime: '12:30' },
-          { id: '2', category: '景點', time: '14:00', name: '淺草寺', ticket: '免費', note: '買人形燒' }
-        ]
-      }));
-
-      // 行前準備資料
-      const prepCategories = ref(loadSavedData('trip_prep_categories_v2', [
-        {
-          id: '1',
-          title: '證件與重要文件',
-          icon: 'fa-solid fa-passport',
-          items: [
-            { id: '1-1', name: '護照 (檢查有效期6個月以上)', completed: false },
-            { id: '1-2', name: '日航/機票電子憑證', completed: false },
-            { id: '1-3', name: 'Visit Japan Web 填寫完成 QR Code', completed: false }
-          ]
-        },
-        {
-          id: '2',
-          title: '個人藥品與日常用品',
-          icon: 'fa-solid fa-briefcase-medical',
-          items: [
-            { id: '2-1', name: '個人常備藥品 / 腸胃藥', completed: false },
-            { id: '2-2', name: '雨具 / 折疊傘', completed: false }
-          ]
-        }
-      ]));
 
       // 桌面端 Drag&Drop
       const draggedIndex = ref(null);
@@ -1004,7 +1296,6 @@
         draggedIndex.value = null;
       };
 
-      // 行前準備類別圖示可選項
       const prepIcons = [
         'fa-solid fa-suitcase',
         'fa-solid fa-passport',
@@ -1033,7 +1324,6 @@
         showPrepCatModal.value = true;
       };
 
-      // 修正：觸發重新賦值，確保深層陣列狀態變更時 Vue 自動重新渲染畫面
       const savePrepCategory = () => {
         if (!prepCatForm.value.title.trim()) return;
         
@@ -1056,25 +1346,16 @@
           prepCategories.value.push(newCat);
           expandedPrepCategories.value.push(newCat.id);
         }
-        // 強制重構陣列參考
         prepCategories.value = [...prepCategories.value];
         showPrepCatModal.value = false;
       };
 
-      const expandedPrepCategories = ref(prepCategories.value.map(c => c.id));
-
-      const driveList = ref(loadSavedData('trip_drive', [
-        { id: '1', type: '租車', company: 'Toyota Rent-a-Car', carModel: 'Yaris (小轎車)', reservationNo: 'TR-882910', mapCode: '33 157 281*00', pickupStore: '成田機場 T1 店', pickupTime: '9/6 13:30', returnStore: '成田機場 T1 店', returnTime: '9/10 16:00', phone: '+81-476-32-1020', mapUrl: '' },
-        { id: '2', type: '加油', stationName: 'ENEOS 成田機場前加油站', gasType: 'Regular (赤色無鉛)', mapCode: '33 158 100*11', note: '還車前記得在此加滿油，並保留收據！', mapUrl: '' }
-      ]));
-
-      const shoppingList = ref(loadSavedData('trip_shopping', [
-        { id: '1', name: '合利他命 EX Plus強效錠', price: 5980, location: '唐吉訶德 澀谷店 MEGA店', mapUrl: '', image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300' }
-      ]));
-
-      const expenses = ref(loadSavedData('trip_expenses', [
-        { id: '1', category: '飲食', name: '敘敘苑燒肉', amount: 12000, payMethod: '信用卡', date: '2026-09-06', image: '' }
-      ]));
+      const expandedPrepCategories = ref([]);
+      watch(currentProjectId, () => {
+        if (prepCategories.value) {
+          expandedPrepCategories.value = prepCategories.value.map(c => c.id);
+        }
+      }, { immediate: true });
 
       const japanesePhrases = ref([
         {
@@ -1084,13 +1365,7 @@
             { jp: 'いくらですか？', kana: 'Ikura desu ka?', zh: '請問這個多少錢？' },
             { jp: 'これをお願いします。', kana: 'Kore o onegai shimasu.', zh: '請幫我結帳這個。' },
             { jp: '免税できますか？', kana: 'Menzei dekimasu ka?', zh: '請問可以退稅嗎？' },
-            { jp: 'クレジットカード使えますか？', kana: 'Kurejitto kādo tsukaemasu ka?', zh: '可以用信用卡嗎？' },
-            { jp: '袋をいただけますか？', kana: 'Fukuro o itadakemasu ka?', zh: '可以給我有袋子嗎？' },
-            { jp: '試着してもいいですか？', kana: 'Shichaku shite mo ii desu ka?', zh: '請問可以試穿嗎？' },
-            { jp: '別のサイズはありますか？', kana: 'Betsu no saizu wa arimasu ka?', zh: '請問有其他尺寸嗎？' },
-            { jp: '別々に会計できますか？', kana: 'Betsubetsu ni kaikei dekimasu ka?', zh: '請問可以分開結帳嗎？' },
-            { jp: 'レシートをください。', kana: 'Reshīto o kudasai.', zh: '請給我收據。' },
-            { jp: '見ているだけです。', kana: 'Mite iru dake desu.', zh: '我只是隨便看看。' }
+            { jp: 'クレジットカード使えますか？', kana: 'Kurejitto kādo tsukaemasu ka?', zh: '可以用信用卡嗎？' }
           ]
         },
         {
@@ -1099,14 +1374,7 @@
           items: [
             { jp: 'おすすめは何ですか？', kana: 'Osusume wa nan desu ka?', zh: '請問有什麼推薦的嗎？' },
             { jp: 'メニューをください。', kana: 'Menyū o kudasai.', zh: '請給我菜單。' },
-            { jp: 'お会計お願いします。', kana: 'Okaikei onegai shimasu.', zh: '麻煩請買單。' },
-            { jp: '水をいただけますか？', kana: 'Mizu o itadakemasu ka?', zh: '可以給我一杯水嗎？' },
-            { jp: '牛肉が食べられません。', kana: 'Gyūniku ga taberaremasen.', zh: '我不吃牛肉。' },
-            { jp: 'これと同じものをください。', kana: 'Kore to onaji mono o kudasai.', zh: '請給我一樣的品項。' },
-            { jp: '英語のメニューはありますか？', kana: 'Eigo no menyū wa arimasu ka?', zh: '請問有英文菜單嗎？' },
-            { jp: '氷なしでお願いします。', kana: 'Kōri nashi de onegai shimasu.', zh: '請幫我去冰。' },
-            { jp: 'アレルギーがあります。', kana: 'Arerugī ga arimasu.', zh: '我有食物過敏。' },
-            { jp: 'ごちそうさまでした。', kana: 'Gochisōsama deshita.', zh: '多謝款待（吃飽後說）。' }
+            { jp: 'お会計お願いします。', kana: 'Okaikei onegai shimasu.', zh: '麻煩請買單。' }
           ]
         },
         {
@@ -1114,15 +1382,7 @@
           icon: 'fa-solid fa-compass',
           items: [
             { jp: '〜はどこですか？', kana: '~ wa doko desu ka?', zh: '請問 ~ 在哪裡？' },
-            { jp: 'トイレはどこですか？', kana: 'Toire wa doko desu ka?', zh: '請問洗手間在哪裡？' },
-            { jp: '駅はどこですか？', kana: 'Eki wa doko desu ka?', zh: '請問車站在哪裡？' },
-            { jp: '切符売り場はどこですか？', kana: 'Kippu uriba wa doko desu ka?', zh: '請問售票處在哪裡？' },
-            { jp: 'この電車は〜に行きますか？', kana: 'Kono densha wa ~ ni ikimasu ka?', zh: '這班電車會到 ~ 嗎？' },
-            { jp: '次の駅はどこですか？', kana: 'Tsugi no eki wa doko desu ka?', zh: '下一站是哪裡？' },
-            { jp: 'ここで降ります。', kana: 'Koko de orimasu.', zh: '我要在這裡下車。' },
-            { jp: 'タクシー乗り場はどこですか？', kana: 'Takushī noriba wa doko desu ka?', zh: '計程車搭乘處在哪裡？' },
-            { jp: '道に迷いました。', kana: 'Michi ni mayoimashita.', zh: '我迷路了。' },
-            { jp: '歩いて何分ですか？', kana: 'Aruite nanpun desu ka?', zh: '走路需要幾分鐘？' }
+            { jp: 'トイレはどこですか？', kana: 'Toire wa doko desu ka?', zh: '請問洗手間在哪裡？' }
           ]
         },
         {
@@ -1130,25 +1390,10 @@
           icon: 'fa-solid fa-triangle-exclamation',
           items: [
             { jp: 'すみません / ごめんなさい', kana: 'Sumimasen / Gomennasai', zh: '不好意思 / 對不起' },
-            { jp: '助けてください！', kana: 'Tasukete kudasai!', zh: '請救救我！ / 幫幫我！' },
-            { jp: '英語が話せますか？', kana: 'Eigo ga hanasemasu ka?', zh: '會說英文嗎？' },
-            { jp: '大丈夫です。', kana: 'Daijōbu desu.', zh: '沒關係 / 很好不需要' },
-            { jp: '警察を呼んでください。', kana: 'Keisatsu o yonde kudasai.', zh: '請幫我叫警察。' },
-            { jp: '病院はどこですか？', kana: 'Byōin wa doko desu ka?', zh: '請問醫院在哪裡？' },
-            { jp: '財布を無くしました。', kana: 'Saifu o nakushimashita.', zh: '我把錢包弄丟了。' },
-            { jp: 'パスポートを落としました。', kana: 'Pasupōto o otoshimashita.', zh: '我把護照弄丟了。' },
-            { jp: '具合が悪いです。', kana: 'Guai ga warui desu.', zh: '我身體很不舒服。' },
-            { jp: '日本語が少ししか話せません。', kana: 'Nihongo ga sukoshi shika hanasemasen.', zh: '我只會說一點點日文。' }
+            { jp: '助けてください！', kana: 'Tasukete kudasai!', zh: '請救救我！' }
           ]
         }
       ]);
-
-      watch(days, (val) => localStorage.setItem('trip_days_v2', JSON.stringify(val)), { deep: true });
-      watch(scheduleData, (val) => localStorage.setItem('trip_schedule_v3', JSON.stringify(val)), { deep: true });
-      watch(driveList, (val) => localStorage.setItem('trip_drive', JSON.stringify(val)), { deep: true });
-      watch(shoppingList, (val) => localStorage.setItem('trip_shopping', JSON.stringify(val)), { deep: true });
-      watch(expenses, (val) => localStorage.setItem('trip_expenses', JSON.stringify(val)), { deep: true });
-      watch(prepCategories, (val) => localStorage.setItem('trip_prep_categories_v2', JSON.stringify(val)), { deep: true });
 
       const formData = ref({});
       
@@ -1271,7 +1516,9 @@
       const deleteCurrentDay = () => {
         if (confirm(`確定要刪除 Day ${selectedDayIndex.value + 1} 的整天行程嗎？`)) {
           days.value.splice(selectedDayIndex.value, 1);
-          delete scheduleData.value[selectedDayIndex.value];
+          const sch = { ...scheduleData.value };
+          delete sch[selectedDayIndex.value];
+          scheduleData.value = sch;
           selectedDayIndex.value = Math.max(0, selectedDayIndex.value - 1);
         }
       };
@@ -1316,38 +1563,42 @@
 
       const saveData = () => {
         if (currentTab.value === 'itinerary') {
-          if (!scheduleData.value[selectedDayIndex.value]) scheduleData.value[selectedDayIndex.value] = [];
+          const sch = { ...scheduleData.value };
+          if (!sch[selectedDayIndex.value]) sch[selectedDayIndex.value] = [];
           if (isEditing.value) {
-            const idx = scheduleData.value[selectedDayIndex.value].findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) scheduleData.value[selectedDayIndex.value][idx] = { ...formData.value };
+            const idx = sch[selectedDayIndex.value].findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) sch[selectedDayIndex.value][idx] = { ...formData.value };
           } else {
-            scheduleData.value[selectedDayIndex.value].push({ ...formData.value, id: Date.now().toString() });
+            sch[selectedDayIndex.value].push({ ...formData.value, id: Date.now().toString() });
           }
-          scheduleData.value = { ...scheduleData.value };
+          scheduleData.value = sch;
         } else if (currentTab.value === 'drive') {
+          const list = [...driveList.value];
           if (isEditing.value) {
-            const idx = driveList.value.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) driveList.value[idx] = { ...formData.value };
+            const idx = list.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) list[idx] = { ...formData.value };
           } else {
-            driveList.value.push({ ...formData.value, id: Date.now().toString() });
+            list.push({ ...formData.value, id: Date.now().toString() });
           }
-          driveList.value = [...driveList.value];
+          driveList.value = list;
         } else if (currentTab.value === 'shopping') {
+          const list = [...shoppingList.value];
           if (isEditing.value) {
-            const idx = shoppingList.value.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) shoppingList.value[idx] = { ...formData.value };
+            const idx = list.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) list[idx] = { ...formData.value };
           } else {
-            shoppingList.value.push({ ...formData.value, id: Date.now().toString() });
+            list.push({ ...formData.value, id: Date.now().toString() });
           }
-          shoppingList.value = [...shoppingList.value];
+          shoppingList.value = list;
         } else if (currentTab.value === 'expense') {
+          const list = [...expenses.value];
           if (isEditing.value) {
-            const idx = expenses.value.findIndex(i => i.id === formData.value.id);
-            if (idx !== -1) expenses.value[idx] = { ...formData.value };
+            const idx = list.findIndex(i => i.id === formData.value.id);
+            if (idx !== -1) list[idx] = { ...formData.value };
           } else {
-            expenses.value.push({ ...formData.value, id: Date.now().toString(), date: new Date().toISOString().split('T')[0] });
+            list.push({ ...formData.value, id: Date.now().toString(), date: new Date().toISOString().split('T')[0] });
           }
-          expenses.value = [...expenses.value];
+          expenses.value = list;
         }
         showModal.value = false;
       };
@@ -1355,7 +1606,9 @@
       const confirmDelete = () => {
         if (confirm('確定要刪除這筆資料嗎？')) {
           if (currentTab.value === 'itinerary') {
-            scheduleData.value[selectedDayIndex.value] = scheduleData.value[selectedDayIndex.value].filter(i => i.id !== formData.value.id);
+            const sch = { ...scheduleData.value };
+            sch[selectedDayIndex.value] = sch[selectedDayIndex.value].filter(i => i.id !== formData.value.id);
+            scheduleData.value = sch;
           } else if (currentTab.value === 'drive') {
             driveList.value = driveList.value.filter(i => i.id !== formData.value.id);
           } else if (currentTab.value === 'shopping') {
@@ -1369,6 +1622,8 @@
 
       return {
         isAuthenticated, passwordInput, passwordError, checkPassword,
+        projects, activeProjects, endedProjects, currentProjectId, showProjectModal, isEditingProject, newProjectForm, 
+        openNewProjectModal, openEditProjectModal, saveProject, selectProject, deleteProject,
         currentTab, showNavMenu, showAddMenu, switchTab, bannerUrl, selectedDayIndex, days,
         scheduleData, currentDaySchedule, driveList, shoppingList, expenses, totalExpense, japanesePhrases,
         prepCategories, expandedPrepCategories, togglePrepCategory, getCompletedPrepCount, deletePrepCategory, deletePrepItem,
